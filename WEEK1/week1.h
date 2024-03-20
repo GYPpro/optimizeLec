@@ -8,14 +8,12 @@
  * a functional lib solving linner search problem
  */
 
-
-
 #ifndef _LINE_SEARCH_
 #define _LINE_SEARCH_
 
 #include <math.h>
 #include <algorithm>
-#include <pair>
+#include <map>
 
 namespace lineSearch{
 
@@ -27,12 +25,14 @@ namespace lineSearch{
 
 	double INF_ACC_RATIO = 10; 	  //the ratio between infinitesimal unit in binary search method and given accuracy, which means inf = acc / INF_ACC_RATIO;
 
-	std::pair<int, int> cacu_Fibonacci(int n)
-	{
 	/**
 	 * @brief 
-	 * caculate 2 value in Fibonacci Array (f[n] and f[n-1])at same time using matrix multiplication and binary lifting method
+	 * caculate 2 value in Fibonacci Array (fb(n) and fb(n))at same time using matrix multiplication and binary lifting method
+	 * use cacu_Fibonacci(n).first to get fb(n)
 	 */
+	std::pair<int, int> cacu_Fibonacci(int n)
+	{
+
 		if (n == 0) return std::pair<int,int>(0,1);
 		auto p = cacu_Fibonacci(n / 2);
 		int c = p.first * (2 * p.second - p.first);
@@ -43,32 +43,6 @@ namespace lineSearch{
 			return std::pair<int,int>(c, d);
 	}
 
-	int binary_locate(auto check)
-	{
-	/**
-	 * @brief 
-	 * 
-	 */
-		int l = minLim,
-					r = maxLim + 1;
-		while (l + 1 < r)
-		{                         
-			int mid = (l + r) / 2; 
-			if (check(mid)) 
-				l = mid; 
-			else
-				r = mid;
-		}
-		return l;
-	}
-
-	double find_mininum(
-		double (*func)(double x),// inputed unimodal function
-		double l,				 // left range
-		double r,				 // right range
-		double acc,				 // Search accuracy
-		int mod 				 // Search mod
-	)
 	/**
 	 * @attention 
 	 * function will return -1 and throw exceptions while getting illegal input
@@ -77,7 +51,13 @@ namespace lineSearch{
 	 * Finding the minnum num of the input unimodal function at a given accuracy
 	 * Usign segmentation interval method
 	 */
-	{
+	double find_mininum(
+		double (*func)(double x),// inputed unimodal function
+		double l,				 // left range
+		double r,				 // right range
+		double acc,				 // Search accuracy
+		int mod 				 // Search mod
+	) {
 		if (l > r) {throw "Illegal Range Execption";return -1;}
 		// if (l - r > acc) {throw "Too sm"}
 		switch (mod)
@@ -100,9 +80,9 @@ namespace lineSearch{
 
 		case GOLDEN_RATIO:
 		{
-			double x; 	   //search index
-			double cul = l,//current left range while searching
-				   cur = r;//current right range while searching
+			double x; 	   										//search index
+			double cul = l,										//current left range while searching
+				   cur = r;										//current right range while searching
 			double otl = func(r - GOLDEN_RATIO_VALUE * (r - l)),//overture point left
 				   otr = func(l + GOLDEN_RATIO_VALUE * (r - l));//overture point right
 			while(cur - cul > acc){
@@ -123,11 +103,40 @@ namespace lineSearch{
 
 		case FIBONACCI:
 		{
-			double x; 	   //search index
-			double cul = l,//current left range while searching
-				   cur = r;//current right range while searching
-			double otl = func(r -  * (r - l)),//overture point left
-				   otr = func(l +  * (r - l));//overture point right
+			double x; 	   			   //search index
+			double cul = l,			   //current left range while searching
+				   cur = r;			   //current right range while searching
+			double FN = (r - l) / acc; //inneed fibonacci value
+			int N;					   //total caculate times
+
+			auto check = [=]() -> int{ //a binary ans locate lambda funcion in order to find the mininum num fiiting check function
+				int minLim = l ,
+					maxLim = r + 1;
+				while (minLim + 1 < maxLim)
+				{                         
+					int mid = (minLim + maxLim) / 2; 
+					if (cacu_Fibonacci(mid).second > FN) 
+						maxLim = mid; 
+					else
+						minLim = mid;
+				}
+				return maxLim;
+			};
+			
+			N = check();
+
+			auto Fib = [](int n) -> double{
+				return (double)cacu_Fibonacci(n).first;
+			};
+			
+			double otl = func(l + Fib(N-2) / Fib(N) * (r - l)), //overture point left
+				   otr = func(l + Fib(N-1) / Fib(N) * (r - l)); //overture point right
+			
+			for(int k = 0;k <= N - 2.0 ;k ++)
+			{
+				
+			}
+			
 		} break;
 		
 		default:
