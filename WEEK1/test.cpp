@@ -11,8 +11,8 @@ int main()
            r = 1.0,
            acc = 0.001;
     double thn = 0.03;
-    cout << lineSearch::find_mininum(f,l,r,acc,lineSearch::FIBONACCI) << "\n";
-    cout << "-- theoretical minimum:0.03000 -- acc:0.001 --\n";
+    cout << "< Theoretical > ans:" << thn << " acc:" << "inf\n";
+
     double ans = lineSearch::find_mininum(f,l,r,acc,lineSearch::BINARY);
     cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 <<"%\n";
     ans = lineSearch::find_mininum(f,l,r,acc,lineSearch::GOLDEN_RATIO);

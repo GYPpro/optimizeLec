@@ -13,7 +13,7 @@
 
 #include <math.h>
 #include <algorithm>
-#include <map>
+#include <vector>
 
 namespace lineSearch{
 
@@ -109,41 +109,47 @@ namespace lineSearch{
 			double FN = (r - l) / acc; //inneed fibonacci value
 			int N;					   //total caculate times
 
-			auto check = [=]() -> int{ //a binary ans locate lambda funcion in order to find the mininum num fiiting check function
-				int minLim = 0 ,
-					maxLim = FN;
-				while (minLim + 1 < maxLim)
-				{                         
-					int mid = (minLim + maxLim) / 2; 
-					if (cacu_Fibonacci(mid).second > FN) 
-						maxLim = mid; 
-					else
-						minLim = mid;
-				}
-				return maxLim;
-			};
+			std::vector<double> Fib(2,1); //Fibonacci array
+			while(Fib[Fib.size()-1] < FN)
+				Fib.push_back(Fib[Fib.size()-1] + Fib[Fib.size()-2]);		
+			N = Fib.size() -1;
+			// for(auto x:Fib) std::cout << x << "\n";
+			// auto check = [=]() -> int{ //a binary ans locate lambda funcion in order to find the mininum num fiiting check function
+			// 	int minLim = 0 ,
+			// 		maxLim = FN;
+			// 	while (minLim + 1 < maxLim)
+			// 	{                         
+			// 		int mid = (minLim + maxLim) / 2; 
+			// 		if (cacu_Fibonacci(mid).second > FN) 
+			// 			maxLim = mid; 
+			// 		else
+			// 			minLim = mid;
+			// 	}
+			// 	return maxLim;
+			// };
 			
-			N = check();
+			// N = check();
 
-			auto Fib = [](int n) -> double{
-				return (double)cacu_Fibonacci(n).first;
-			};
+			// auto Fib = [](int n) -> double{
+			// 	return (double)cacu_Fibonacci(n).first;
+			// };
 			
-			double otl = func(l + Fib(N-2) / Fib(N) * (r - l)), //overture point left
-				   otr = func(l + Fib(N-1) / Fib(N) * (r - l)); //overture point right
+			double otl = func(l + Fib[N-2] / Fib[N] * (r - l)), //overture point left
+				   otr = func(l + Fib[N-1] / Fib[N] * (r - l)); //overture point right
 			
 			for(int k = 0;k <= N - 2.0 ;k ++)
 			{
-				std::cout << cul << " " << cur << "\n";
-				if(otl > otr)
+				// std::cout << cul << " " << cur << " k:" << k << "\n";
+				if(otl > otr) //the mininum located at the right range of left overture point 
 				{
-					cul = cul + Fib(N-2) / Fib(N) * (r - l);
+					cul = cul + Fib[N - k - 2] / Fib[N - k] * (cur - cul);
+					//move left range to left overture point
 					otl = otr;
-					otr = func(l + Fib(N - k - 1) / Fib(N - k) * (r - l));
+					otr = func(cul + Fib[N - k - 1] / Fib[N - k] * (cur - cul));
 				} else {
-					cur = cul = Fib(N-1) / Fib(N) * (r - l);
+					cur = cul + Fib[N - k - 1] / Fib[N - k] * (cur - cul);
 					otr = otl;
-					otl = func(1 + Fib(N - k - 2) / Fib(N - k) * (r - l));
+					otl = func(cul + Fib[N - k - 2] / Fib[N - k] * (cur - cul));
 				}
 				x = cul;
 			}
