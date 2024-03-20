@@ -110,8 +110,8 @@ namespace lineSearch{
 			int N;					   //total caculate times
 
 			auto check = [=]() -> int{ //a binary ans locate lambda funcion in order to find the mininum num fiiting check function
-				int minLim = l ,
-					maxLim = r + 1;
+				int minLim = 0 ,
+					maxLim = FN;
 				while (minLim + 1 < maxLim)
 				{                         
 					int mid = (minLim + maxLim) / 2; 
@@ -134,9 +134,20 @@ namespace lineSearch{
 			
 			for(int k = 0;k <= N - 2.0 ;k ++)
 			{
-				
+				std::cout << cul << " " << cur << "\n";
+				if(otl > otr)
+				{
+					cul = cul + Fib(N-2) / Fib(N) * (r - l);
+					otl = otr;
+					otr = func(l + Fib(N - k - 1) / Fib(N - k) * (r - l));
+				} else {
+					cur = cul = Fib(N-1) / Fib(N) * (r - l);
+					otr = otl;
+					otl = func(1 + Fib(N - k - 2) / Fib(N - k) * (r - l));
+				}
+				x = cul;
 			}
-			
+			return x;
 		} break;
 		
 		default:
