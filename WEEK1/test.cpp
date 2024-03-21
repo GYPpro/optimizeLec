@@ -1,9 +1,14 @@
 #include <iostream>
+#include <stdlib.h>
 #include "week1.h"
 using namespace std;
+
+int tc = 10; // test case
+double dev = 0.03; // deviation
+
 double f(double a)
 {
-    return (a-0.03) * (a-0.03);
+    return (a - dev) * (a - dev);
 }
 int main()
 {
@@ -11,13 +16,33 @@ int main()
            r = 1.0,
            acc = 0.001;
     double thn = 0.03;
-    cout << "< Theoretical > ans:" << thn << " acc:" << "inf\n";
+    srand(1145);
 
-    double ans = lineSearch::find_mininum(f,l,r,acc,lineSearch::BINARY);
-    cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 <<"%\n";
-    ans = lineSearch::find_mininum(f,l,r,acc,lineSearch::GOLDEN_RATIO);
-    cout << "[0.618  method] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 <<"%\n";
-    ans = lineSearch::find_mininum(f,-1,1,acc,lineSearch::FIBONACCI);
-    cout << "[  Fibonacci  ] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 <<"%\n";
+    auto randint = [](int l,int r) -> int{
+        return (int)((rand() * (r - l))/(RAND_MAX) + l);
+    };
+
+    while(tc --){
+
+        dev = ((double)randint(1,100))/50.0;
+        thn = dev;
+        l = dev - ((double)randint(100,200))/50.0;
+        r = dev + ((double)randint(100,200))/50.0;
+        acc = pow(0.1,abs(randint(1,10)));
+
+        cout << "\n----Test Cases" << 10 - tc<< "----\n";
+
+        cout << "< search data > l:" << l << " r:" << r << " acc:" << acc <<  "\n";
+
+        cout << "< Theoretical > ans:" << thn << " acc:"
+             << "inf\n";
+
+        double ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+        cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) << "%\n";
+        ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+        cout << "[0.618  method] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) << "%\n";
+        ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+        cout << "[  Fibonacci  ] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc << "%\n";
+    }
     system("pause");
 }

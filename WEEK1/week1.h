@@ -163,7 +163,7 @@ namespace lineSearch{
 		}
 			break;
 		}
-		throw "Unknown Signal Exception";
+		throw "Unknown Exception";
 		return -1;
 	}
 }
