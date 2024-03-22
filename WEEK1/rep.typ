@@ -66,16 +66,62 @@
 #h(1.8em)基于无导数二分法、黄金分割法和Fibonacci法实现对单谷函数的求解
 
 
-= 实验环境
-\
-#h(1.8em)计算机：PC X64 + Android aarch64
+= 实验原理与理论分析
+== 二分法
+#h(1.8em)第$k$步搜索区间$[l_k,r_k]$，微元$epsilon$，试探点$ m_(k ,1) = (l_k + r_k)/2 + epsilon \ m_(k, 2) = (l_k + r_k)/2 - epsilon $
 
-操作系统：Windows + termux
+有转移方程：$ cases(
+    r_(k+1) = m_k #h(1cm) & f(m_(k, 1)) > f(m_(k, 2))\
+    l_(k+1) = m_k #h(1cm) & f(m_(k ,1)) <= f(m_(k ,2))\
+     ) $
 
-编程语言：python + C++ 
+== 黄金分割法
+#h(1.8em)第$k$步搜索区间$[l_k,r_k]$，缩短率$tau = (sqrt(5)-1)/2$，试探点$ m_(k, 1) & = l_k + (1 - tau)(r_k - l_k) \ m_(k ,2) & = l_k + tau (r_k - l_k) $
 
-IDE：Visual Studio Code
+有转移方程：$ cases(
+    r_(k+1) = m_(k, 1) #h(1cm) & f(m_(k, 1)) > f(m_(k ,2))\
+    l_(k+1) = m_(k, 2) #h(1cm) & f(m_(k ,1)) <= f(m_(k, 2))\
+     ) $
+     
+#set page(  header: [
+    #set text(
+      size: 25pt,
+      font: "KaiTi",
+    )
+    #align(
+      bottom + center,
+      [ #strong[暨南大学本科实验报告专用纸(附页)] ]
+    )
+    #line(start: (0pt,-5pt),end:(453pt,-5pt))
+  ])
+特别的，对于新的试探点，有$ m_(k+1, 1) & =l_k + tau^2 (r_k - l_k) \ tau^2 & = 1-tau $
+因此新试探点$ m_(k+1, 1) = m_(k,2) $不需要重新计算。另一侧试探点的情况于此同理。
 
+== 斐波那契法
+
+斐波那契数列满足：
+$ & F_0 = F_1 = 1,\
+ & F_(k+1) = F_(k-1) + F_k , #h(1cm)k = 1,2,... $
+ 则令$tau = F(n-k)/F(n-k+1)$，同样有试探点$ m_(k, 1) & = l_k + (1 - tau)(r_k - l_k) \ m_(k ,2) & = l_k + tau (r_k - l_k) $
+
+转移方程：$ cases(
+    r_(k+1) = m_(k, 1) #h(1cm) & f(m_(k, 1)) > f(m_(k ,2))\
+    l_(k+1) = m_(k, 2) #h(1cm) & f(m_(k ,1)) <= f(m_(k, 2))\
+     ) $
+
+特别的，对于新的试探点，由于教材缺少推导，因此在此写出详细步骤：有
+// $ m_(k+1,1)& = l_(k+1) + (1 - F_(n-k-1)/F_(n-k))(r_(k+1) - l_(k+1))\
+// & = m_(k,1) + F_(n-k-2)/F_(n-k)(r_k - m_(k,1)) \
+// & = l_k + F_(n-k-1)/F_(n-k-1)(r_k - l_k) + F_(n-k-2)/F_(n-k)(r_k - F_(n-k-1)/F_(n-k-1)(r_k - l_k)) $
+
+$ m_(k+1,1)& = l_(k+1) + F_(n-k-1)/F_(n-k)(r_(k+1) - l_(k+1))\
+& = l_(k+1) + F_(n-k-1)/F_(n-k)(m_(k,1) - l_(k+1)) \
+& = l_(k) + F_(n-k-1)/F_(n-k)(l_k + F_(n-k)/F_(n-k+1)(r_k - l_k) - l_(k)) \
+& = l_k + F_(n - k)/F_(n-k+1)(r_k - l_k) = m_(k,2)$
+因此不需要重复计算。
+
+#pagebreak(
+)
 
 = 具体实现
 \
@@ -93,17 +139,6 @@ IDE：Visual Studio Code
 	);
 ```
 
-#set page(  header: [
-    #set text(
-      size: 25pt,
-      font: "KaiTi",
-    )
-    #align(
-      bottom + center,
-      [ #strong[暨南大学本科实验报告专用纸(附页)] ]
-    )
-    #line(start: (0pt,-5pt),end:(453pt,-5pt))
-  ])
 
 #h(1.8em)其中，`func`为目标单谷函数，`l`、`r`分别为初始区间的两个端点，`acc`为搜索精度，`mod`为模式选择。
 
@@ -128,6 +163,8 @@ IDE：Visual Studio Code
         columns: 2
     )
 )
+
+#pagebreak()
 
 = 核心代码构成#h(1cm)
 #strong()[完整代码见7.附录]
@@ -255,7 +292,7 @@ lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
 
 规定理论值为`thn`，当前答案为`ans`
 
-下面是10次测试的结果，其中当前精准度$ "acc"_"当前"= "acc" / abs("thn" - "ans") * 100 % $#h(1.8em)反映了搜索的准确度。其中偏差量$ "dev" = max(0,abs("thn"-"ans")-"acc")/"acc" * 100% $#h(1.8em)反应了搜索结果与目标的偏差是否在可接受范围内。
+下面是10次测试的结果，其中当前精准度$ "acc"_"当前"= "acc" / abs("thn" - "ans") times 100 % $#h(1.8em)反映了搜索的准确度。其中偏差量$ "dev" = max(0,abs("thn"-"ans")-"acc")/"acc" times 100% $#h(1.8em)反应了搜索结果与目标的偏差是否在可接受范围内。
 
 $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 
@@ -309,21 +346,545 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 = 各方法不同情况下的性能表现与分析
 \
 #strong()[完整测试代码见7.附录]
-== 对于一般单谷函数，进行大范围区间搜索：
+
+== 对于复杂目标函数进行搜索：
 \
-#h(1.8em) 这一项测试针对大部分搜索场景，考验算法的区间下降速度。
+#h(1.8em)这一项测试针对在绝大部分实用数学模型的求解时的场景，即目标函数十分复杂难以计算，需要尽量减少计算函数值的次数，是最主要的应用环境，考察算法解决复杂问题的能力。
 
-测试函数：$f(x) = cases(sqrt(x+1.03) #h(1cm) & (x >= -0.48)  \ sqrt(0.07-x) & (x < -0.48) )$
+=== 测试结果猜想：
+\
+#h(1.8em)每次迭代搜索次数较少的Fibonacci法与黄金分割法将显著快于虽然下降率大但搜索次数较高二分法。
 
-测试函数性质：在$RR$上为单谷函数，最小值在$x = -0.48$处取得，$f(0.48) tilde.eq 0.7416198463187$
+=== 测试过程：
+\
+#h(1.8em)测试函数：$f(x) = (x-0.3)^2 + min((1/(x-0.3))^(10^5),0.001)$
 
-测试内容：给定相同的测试参数，分别进行十次搜索，统计平均时间消耗。
+其  图像如下：#align(center)[
+#image("p1.png",width: 33%);]
 
-测试参数：`l = -1e5,r = 1e5,acc = 0.00001`
+#h(1.8em)测试函数性质：每次计算函数值会涉及无法被优化的$10^5$次乘方运算，可以较好的模拟实际模型中的复杂情况。数学上，$f(x)$在$RR$上为单谷函数，最小值在$x = 0.3$处取得，$f(0.3) = 0$
+
+测试内容：给定相同的测试参数，分别进行500次搜索，统计总时间消耗。
+
+测试参数：$l = - 1 times 10^5,r = 1 times 10^5,"acc" = 1 times 10^(-5)$
 
 搜索结果：
 ```
-    [Binary search] ans:-0.480004 acc:273.601 dev:0%
-    [0.618  method] ans:-0.480005 acc:221.192 dev:0%
-    [  Fibonacci  ] ans:-0.48001 acc:104.605 dev:0%
+    [Binary search] ans:0.299996 acc:282.772 dev:0%
+    [0.618  method] ans:0.299997 acc:307.922 dev:0%
+    [  Fibonacci  ] ans:0.299995 acc:197.102 dev:0%
 ```
+
+时间测试结果：
+```
+    [Binary search] cost:10.689s
+    [0.618  method] cost:7.233s
+    [  Fibonacci  ] cost:7.108s
+```
+
+=== 测试分析：
+\
+#h(1.8em)根据测试结果来看，基本符合预期。二分查找由于大量额外的查找，导致时间消耗高于另外两种搜索，又由于斐波那契法的下降速率略快于黄金分割法，因此最终执行速率略快。
+
+== 对于简单单谷函数，进行大范围区间搜索：
+\
+#h(1.8em) 这一项测试在简单场景较为实用，主要考验算法的收敛速度。
+
+=== 测试结果猜想：
+\
+#h(1.8em) 缩短率最小的二分法会是最快的，Fibonacci次之，而黄金分割最慢。
+
+=== 测试过程：
+\
+#h(1.8em) 测试函数：$f(x) = (x-0.48)^2$
+
+测试函数性质：在$RR$上为单谷函数，最小值在$x = -0.48$处取得，$f(-0.48) eq 0$
+
+测试内容：给定相同的测试参数，分别进行500次搜索，统计总时间消耗。
+
+测试参数：$l = - 1 times 10^100,r = 1 times 10^100,"acc" = 1 times 10^(-12)$
+
+搜索结果：
+```
+    [Binary search] ans:-0.48 acc:40941.8 dev:0%
+    [0.618  method] ans:-0.48 acc:682.364 dev:0%
+    [  Fibonacci  ] ans:-0.48 acc:162.658 dev:0%
+```
+
+时间测试结果：
+```
+    [Binary search] cost:0.001s
+    [0.618  method] cost:0.003s
+    [  Fibonacci  ] cost:0.026s
+```
+=== 测试分析：
+\
+#h(1cm)
+从测试结果来看，二分法最快，与预期相同；而斐波那契法比黄金分割法慢，与预期不符。
+
+猜测原因在于搜索范围极端大时斐波那契法需要申请额外的大量内存用于存储计算过程中需要使用的斐波那契数列，导致算法常数复杂度较大，且目标函数较为简单，导致节省查询次数收益很小。
+
+
+== 对于小区间和一般函数的快速搜索：
+\
+#h(1.8em)这一项测试针对在小规模数据计算中常用的场景，即搜索区间较小，精度要求较低，函数较为简单。考察算法初期下降速率与常数级别优化。
+
+
+=== 测试结果猜想：
+\
+#h(1.8em) 黄金分割最快，二分法次之，斐波那契法最慢
+
+=== 测试过程：
+\
+#h(1.8em) 测试函数：$f(x) = cases(sqrt(x+1.03) #h(1cm) & (x >= -0.48)  \ sqrt(0.07-x) & (x < -0.48) )$
+
+测试函数性质：在$RR$上为单谷函数，最小值在$x = -0.48$处取得，$f(-0.48) tilde.eq 0.7416198463187$
+
+测试内容：给定相同的测试参数，分别进行$1 times 10^6$次搜索，统计总时间消耗。
+
+测试参数：$l = - 1,r = 1,"acc" = 1 times 10^(-3)$
+
+搜索结果：
+```
+    [Binary search] ans:-0.480469 acc:213.333 dev:0%
+    [0.618  method] ans:-0.48046 acc:217.357 dev:0%
+    [  Fibonacci  ] ans:-0.48065 acc:153.81 dev:0%
+```
+
+时间测试结果：
+```
+    [Binary search] cost:0.191s
+    [0.618  method] cost:0.159s
+    [  Fibonacci  ] cost:8.19s
+```
+=== 测试分析：
+\
+#h(1.8em)从测试结果来看，黄金分割法略微领先二分法，斐波那契法遥遥落后，与预期吻合。黄金分割的轻量级和计算次数较少的优势在本组样例中体现较为明显，而二分虽然下降最快，但计算次数有一定劣势。斐波那契则由于大量额外的常数计算导致在小规模样例中不讨好。
+
+= 附录
+
+== 主体部分：文件`core.h`
+
+```cpp
+/**
+ * @author
+ * JNU,Guo Yanpei,github@GYPpro
+ * https://github.com/GYPpro/optimizeLec
+ * @file
+ * /optimizeLec/WEEK1/core.h
+ * @brief
+ * a functional lib solving linner search problem
+ */
+
+#ifndef _LINE_SEARCH_
+#define _LINE_SEARCH_
+
+#include <math.h>
+#include <algorithm>
+#include <vector>
+
+namespace lineSearch{
+
+	const int BINARY = 1;		  //binary search method
+	const int GOLDEN_RATIO = 2; //0.618 method
+	const int FIBONACCI = 3;	  //Fibonacci method
+ 
+	const double GOLDEN_RATIO_VALUE = (sqrt(5.0) - 1.0)/2.0;
+
+	double INF_ACC_RATIO = 10; 	  //the ratio between infinitesimal unit in binary search method and given accuracy, which means inf = acc / INF_ACC_RATIO;
+
+	/**
+	 * @brief 
+	 * caculate 2 value in Fibonacci Array (fb(n) and fb(n))at same time using matrix multiplication and binary lifting method
+	 * use cacu_Fibonacci(n).first to get fb(n)
+	 */
+	std::pair<int, int> cacu_Fibonacci(int n)
+	{
+
+		if (n == 0) return std::pair<int,int>(0,1);
+		auto p = cacu_Fibonacci(n / 2);
+		int c = p.first * (2 * p.second - p.first);
+		int d = p.first * p.first + p.second * p.second;
+		if (n & 1)
+			return std::pair<int,int>(d, c + d);
+		else
+			return std::pair<int,int>(c, d);
+	}
+
+	/**
+	 * @attention 
+	 * function will return -1 and throw exceptions while getting illegal input
+	 * given a illegal input function is undefined behavior
+	 * @brief
+	 * Finding the minnum num of the input unimodal function at a given accuracy
+	 * Usign segmentation interval method
+	 */
+	double find_mininum(
+		double (*func)(double x),// inputed unimodal function
+		double l,				 // left range
+		double r,				 // right range
+		double acc,				 // Search accuracy
+		int mod 				 // Search mod
+	) {
+		if (l > r) {throw "Illegal Range Execption";return -1;}
+		// if (l - r > acc) {throw "Too sm"}
+		switch (mod)
+		{
+		
+		case BINARY:
+		{
+			double inf = acc /INF_ACC_RATIO, //infinitesimal unit
+				   x;					     //search index
+			double cul = l,//current left range while searching
+				   cur = r;//current right range while searching
+			while(cur - cul > acc){
+				double mid = ( cul + cur ) /2.0;
+				if(func(mid + inf) > func(mid - inf)) cur = mid;//the mininum located at the left range of middle value
+				else cul = mid;//otherwise
+				x = cul;
+			}
+			return x;
+		} break;
+
+		case GOLDEN_RATIO:
+		{
+			double x; 	   										//search index
+			double cul = l,										//current left range while searching
+				   cur = r;										//current right range while searching
+			double otl = func(r - GOLDEN_RATIO_VALUE * (r - l)),//overture point left
+				   otr = func(l + GOLDEN_RATIO_VALUE * (r - l));//overture point right
+			while(cur - cul > acc){
+				if(otl > otr) //the mininum located at the right range of left overture point 
+				{
+					cul = cur - GOLDEN_RATIO_VALUE * (cur - cul);
+					otl = otr;
+					otr = func(cul + GOLDEN_RATIO_VALUE * (cur - cul));
+				} else { 	  //otherwise
+					cur = cul + GOLDEN_RATIO_VALUE * (cur - cul);
+					otr = otl;
+					otl = func(cur - GOLDEN_RATIO_VALUE * (cur - cul));
+				}
+				x = cul;
+			}
+			return x;
+		} break;
+
+		case FIBONACCI:
+		{
+			double x; 	   			   //search index
+			double cul = l,			   //current left range while searching
+				   cur = r;			   //current right range while searching
+			double FN = (r - l) / acc; //inneed fibonacci value
+			int N;					   //total caculate times
+
+			std::vector<double> Fib(2,1); //Fibonacci array
+			while(Fib[Fib.size()-1] < FN)
+				Fib.push_back(Fib[Fib.size()-1] + Fib[Fib.size()-2]);		
+			N = Fib.size() -1;
+			
+			double otl = func(l + Fib[N-2] / Fib[N] * (r - l)), //overture point left
+				   otr = func(l + Fib[N-1] / Fib[N] * (r - l)); //overture point right
+			
+			for(int k = 0;k <= N - 2.0 ;k ++)
+			{
+				// std::cout << cul << " " << cur << " k:" << k << "\n";
+				if(otl > otr) //the mininum located at the right range of left overture point 
+				{
+					cul = cul + Fib[N - k - 2] / Fib[N - k] * (cur - cul);
+					//move left range to left overture point
+					otl = otr;
+					otr = func(cul + Fib[N - k - 1] / Fib[N - k] * (cur - cul));
+				} else {
+					cur = cul + Fib[N - k - 1] / Fib[N - k] * (cur - cul);
+					otr = otl;
+					otl = func(cul + Fib[N - k - 2] / Fib[N - k] * (cur - cul));
+				}
+				x = cul;
+			}
+			return x;
+		} break;
+		
+		default:
+		{
+			throw "Unexpection Search Mod Exception";
+			return -1;
+		}
+			break;
+		}
+		throw "Unknown Exception";
+		return -1;
+	}
+}
+#endif
+```
+== 正确性测试：文件`TOFtest.cpp`
+
+```cpp
+/**
+ * @file TOFtest.cpp
+ * @brief True or False test
+ */
+
+#include <iostream>
+#include <stdlib.h>
+#include "core.h"
+using namespace std;
+
+int tc = 10; // test case
+double dev = 0.03; // deviation
+
+double f(double a)
+{
+    return (a - dev) * (a - dev);
+}
+int main()
+{
+    double l = -1,
+           r = 1.0,
+           acc = 0.001;
+    double thn = 0.03;
+    srand(1145);
+
+    auto randint = [](int l,int r) -> int{
+        return (int)((rand() * (r - l))/(RAND_MAX) + l);
+    };
+
+    while(tc --){
+
+        dev = ((double)randint(1,100))/50.0;
+        thn = dev;
+        l = dev - ((double)randint(100,200))/50.0;
+        r = dev + ((double)randint(100,200))/50.0;
+        acc = pow(0.1,abs(randint(1,10)));
+
+        cout << "\n----Test Cases" << 10 - tc<< "----\n";
+
+        cout << "< search data > l:" << l << " r:" << r << " acc:" << acc <<  "\n";
+
+        cout << "< Theoretical > ans:" << thn << " acc:"
+             << "inf\n";
+
+        double ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+        cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+        ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+        cout << "[0.618  method] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+        ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+        cout << "[  Fibonacci  ] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    }
+    system("pause");
+}
+```
+
+== 复杂函数测试：`CMFtest.cpp`
+
+```cpp/**
+ * @file CMFtest.cpp
+ * @brief Complex Model Funtion test
+ */
+
+
+#include <iostream>
+#include <stdlib.h>
+#include "core.h"
+#include <time.h>
+using namespace std;
+
+int N = 5000;       // test case
+double dev = 0.03; // deviation
+int k = 1e5;
+
+double f(double x)
+{
+    double pf = x-0.3;
+    for(int i = 0;i < k -1;i ++)
+        pf *= (x-0.3);
+    pf = min(pf,0.001);
+    return (x-0.3) * (x-0.3) + pf;
+}
+int main()
+{
+    // cout << f();
+    int tc = 0;
+    double l = -1e5, r = 1e5, acc = 1e-5;
+    double thn = 0.3;
+    double ans;
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+    cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+    cout << "[0.618  method] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+    cout << "[  Fibonacci  ] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    int begin = clock();
+    while (N > tc++)
+    {
+
+        ans += lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+    }
+    int end = clock();
+    tc = 0;
+    cout << "[Binary search] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+    }
+    end = clock();
+    tc = 0;
+    cout << "[0.618  method] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+    }
+    end = clock();
+    tc = 10;
+    cout << "[  Fibonacci  ] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    cout << ans << "\n";
+    system("pause");
+}
+```
+
+== 大区间测试：`LGAtest.cpp`
+
+```cpp
+/**
+ * @file LGAtest.cpp
+ * @brief Large Arrange test
+ */
+
+#include <iostream>
+#include <stdlib.h>
+#include "core.h"
+#include <time.h>
+using namespace std;
+
+int N = 500;       // test case
+double dev = 0.03; // deviation
+
+double f(double x)
+{
+    // if (x >= -0.48)
+    //     return sqrt(x + 1.03);
+    // else
+    //     return sqrt(0.07 - x);
+    return (x + 0.48) * (x + 0.48);
+}
+int main()
+{
+    int tc = 0;
+    double l = -1e100, r = 1e100, acc = 1e-12;
+    double thn = -0.48;
+    double ans;
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+    cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+    cout << "[0.618  method] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+    cout << "[  Fibonacci  ] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    int begin = clock();
+    while (N > tc++)
+    {
+
+        ans += lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+    }
+    int end = clock();
+    tc = 0;
+    cout << "[Binary search] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+    }
+    end = clock();
+    tc = 0;
+    cout << "[0.618  method] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+    }
+    end = clock();
+    tc = 10;
+    cout << "[  Fibonacci  ] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    cout << ans << "\n";
+    system("pause");
+}
+```
+
+== 大数量测试：`LNGtest.cpp`
+```cpp
+/**
+ * @file LGNtest.cpp
+ * @brief Large Number test
+ */
+
+#include <iostream>
+#include <stdlib.h>
+#include "core.h"
+#include <time.h>
+using namespace std;
+
+int N = 1e7;       // test case
+double dev = 0.03; // deviation
+
+double f(double x)
+{
+    // if (x >= -0.48)
+    //     return sqrt(x + 1.03);
+    // else
+    //     return sqrt(0.07 - x);
+    return (x + 0.48) * (x + 0.48);
+}
+int main()
+{
+    int tc = 0;
+    double l = -0.5, r = 1.5, acc = 1e-3;
+    double thn = -0.48;
+    double ans;
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+    cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+    cout << "[0.618  method] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+    cout << "[  Fibonacci  ] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    int begin = clock();
+    while (N > tc++)
+    {
+
+        ans += lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+    }
+    int end = clock();
+    tc = 0;
+    cout << "[Binary search] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+    }
+    end = clock();
+    tc = 0;
+    cout << "[0.618  method] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+    }
+    end = clock();
+    tc = 10;
+    cout << "[  Fibonacci  ] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    cout << ans << "\n";
+    system("pause");
+}
+```
+
+== 代码下载
+
+全部代码、与x86可执行程序远程`public`存储库：`https://github.com/GYPpro/optimizeLec`
+#set text(fill:gray)
+声明：本实验报告所有代码与测试均由本人独立完成，修改和commit记录均在repo上公开。

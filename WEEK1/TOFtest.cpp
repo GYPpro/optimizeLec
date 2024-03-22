@@ -1,6 +1,11 @@
+/**
+ * @file TOFtest.cpp
+ * @brief True or False test
+ */
+
 #include <iostream>
 #include <stdlib.h>
-#include "week1.h"
+#include "core.h"
 using namespace std;
 
 int tc = 10; // test case

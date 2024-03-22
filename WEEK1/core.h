@@ -66,7 +66,7 @@ namespace lineSearch{
 		case BINARY:
 		{
 			double inf = acc /INF_ACC_RATIO, //infinitesimal unit
-				   x;				  	  //search index
+				   x;					     //search index
 			double cul = l,//current left range while searching
 				   cur = r;//current right range while searching
 			while(cur - cul > acc){
@@ -113,26 +113,6 @@ namespace lineSearch{
 			while(Fib[Fib.size()-1] < FN)
 				Fib.push_back(Fib[Fib.size()-1] + Fib[Fib.size()-2]);		
 			N = Fib.size() -1;
-			// for(auto x:Fib) std::cout << x << "\n";
-			// auto check = [=]() -> int{ //a binary ans locate lambda funcion in order to find the mininum num fiiting check function
-			// 	int minLim = 0 ,
-			// 		maxLim = FN;
-			// 	while (minLim + 1 < maxLim)
-			// 	{                         
-			// 		int mid = (minLim + maxLim) / 2; 
-			// 		if (cacu_Fibonacci(mid).second > FN) 
-			// 			maxLim = mid; 
-			// 		else
-			// 			minLim = mid;
-			// 	}
-			// 	return maxLim;
-			// };
-			
-			// N = check();
-
-			// auto Fib = [](int n) -> double{
-			// 	return (double)cacu_Fibonacci(n).first;
-			// };
 			
 			double otl = func(l + Fib[N-2] / Fib[N] * (r - l)), //overture point left
 				   otr = func(l + Fib[N-1] / Fib[N] * (r - l)); //overture point right
