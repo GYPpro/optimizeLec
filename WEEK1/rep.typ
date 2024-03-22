@@ -551,7 +551,6 @@ namespace lineSearch{
 		int mod 				 // Search mod
 	) {
 		if (l > r) {throw "Illegal Range Execption";return -1;}
-		// if (l - r > acc) {throw "Too sm"}
 		switch (mod)
 		{
 		
@@ -789,10 +788,6 @@ double dev = 0.03; // deviation
 
 double f(double x)
 {
-    // if (x >= -0.48)
-    //     return sqrt(x + 1.03);
-    // else
-    //     return sqrt(0.07 - x);
     return (x + 0.48) * (x + 0.48);
 }
 int main()
@@ -857,10 +852,6 @@ double dev = 0.03; // deviation
 
 double f(double x)
 {
-    // if (x >= -0.48)
-    //     return sqrt(x + 1.03);
-    // else
-    //     return sqrt(0.07 - x);
     return (x + 0.48) * (x + 0.48);
 }
 int main()
