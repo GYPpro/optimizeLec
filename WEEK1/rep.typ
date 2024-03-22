@@ -53,7 +53,7 @@
 实验项目编号#underline[#text("       1     ")]实验项目类型#underline[#text("  设计性  ")]实验地点#underline[#text(" 数学系机房 ")]\
 学生姓名#underline[#text("            郭彦培            ")]学号#underline[#text("            2022101149               ")]\
 学院#underline[#text(" 信息科学技术学院 ")]系#underline[#text(" 数学系 ")]专业#underline[#text(" 信息管理与信息系统 ")]\
-实验时间#underline[#text(" 2024年3月21日上午 ")]#text("~")#underline[#text("3月21日中午")] 温度#underline()[21]℃湿度#underline()[85%]\
+实验时间#underline[#text(" 2024年3月21日上午 ")]#text("~")#underline[#text("3月23日晚上")] 温度#underline()[21]℃湿度#underline()[85%]\
 ]
 #set heading(
   numbering: "1.1."
@@ -61,12 +61,27 @@
   
 #set par( first-line-indent: 1.8em)
 
-= 实验目的
+#outline(
+  title:[#smallcaps("目录")\ #h(1fr)],
+  depth: 2,
+);
+#set page(  header: [
+    #set text(
+      size: 25pt,
+      font: "KaiTi",
+    )
+    #align(
+      bottom + center,
+      [ #strong[暨南大学本科实验报告专用纸(附页)] ]
+    )
+    #line(start: (0pt,-5pt),end:(453pt,-5pt))
+  ])
+= *实验目的*
 \
 #h(1.8em)基于无导数二分法、黄金分割法和Fibonacci法实现对单谷函数的求解
 
 
-= 实验原理与理论分析
+= *实验原理与理论分析*
 == 二分法
 #h(1.8em)第$k$步搜索区间$[l_k,r_k]$，微元$epsilon$，试探点$ m_(k ,1) = (l_k + r_k)/2 + epsilon \ m_(k, 2) = (l_k + r_k)/2 - epsilon $
 
@@ -83,17 +98,7 @@
     l_(k+1) = m_(k, 2) #h(1cm) & f(m_(k ,1)) <= f(m_(k, 2))\
      ) $
      
-#set page(  header: [
-    #set text(
-      size: 25pt,
-      font: "KaiTi",
-    )
-    #align(
-      bottom + center,
-      [ #strong[暨南大学本科实验报告专用纸(附页)] ]
-    )
-    #line(start: (0pt,-5pt),end:(453pt,-5pt))
-  ])
+
 特别的，对于新的试探点，有$ m_(k+1, 1) & =l_k + tau^2 (r_k - l_k) \ tau^2 & = 1-tau $
 因此新试探点$ m_(k+1, 1) = m_(k,2) $不需要重新计算。另一侧试探点的情况于此同理。
 
@@ -102,7 +107,11 @@
 斐波那契数列满足：
 $ & F_0 = F_1 = 1,\
  & F_(k+1) = F_(k-1) + F_k , #h(1cm)k = 1,2,... $
- 则令$tau = F(n-k)/F(n-k+1)$，同样有试探点$ m_(k, 1) & = l_k + (1 - tau)(r_k - l_k) \ m_(k ,2) & = l_k + tau (r_k - l_k) $
+ 则令缩短率$tau = F(n-k)/F(n-k+1)$
+// #align(center)[
+// #image("p2.png",width: 50%)]
+
+ 同样有试探点$ m_(k, 1) & = l_k + (1 - tau)(r_k - l_k) \ m_(k ,2) & = l_k + tau (r_k - l_k) $
 
 转移方程：$ cases(
     r_(k+1) = m_(k, 1) #h(1cm) & f(m_(k, 1)) > f(m_(k ,2))\
@@ -117,14 +126,14 @@ $ & F_0 = F_1 = 1,\
 $ m_(k+1,1)& = l_(k+1) + F_(n-k-1)/F_(n-k)(r_(k+1) - l_(k+1))\
 & = l_(k+1) + F_(n-k-1)/F_(n-k)(m_(k,1) - l_(k+1)) \
 & = l_(k) + F_(n-k-1)/F_(n-k)(l_k + F_(n-k)/F_(n-k+1)(r_k - l_k) - l_(k)) \
-& = l_k + F_(n - k)/F_(n-k+1)(r_k - l_k) = m_(k,2)$
+& = l_k + F_(n - k)/F_(n-k+1)(r_k - l_k) = m_(k,2) $
 
 因此不需要重复计算。
 
 #pagebreak(
 )
 
-= 具体实现
+= *代码框架*
 \
 #h(1.8em)实现一个函数，接受目标函数的函数指针，初始搜索区间，方法选择器，返回求得的单谷函数的最小值。
 
@@ -174,7 +183,7 @@ lineSearch::find_mininum(f,114,514,0.0019,lineSearch::FIBONACCI)
 
 #pagebreak()
 
-= 核心代码构成#h(1cm)
+= *核心代码构成*
 #strong()[完整代码见7.附录]
 \
 == 无导数二分法
@@ -274,7 +283,7 @@ lineSearch::find_mininum(f,114,514,0.0019,lineSearch::FIBONACCI)
     return x;
 ```
 
-= 正确性测试
+= *正确性测试*
 \
 #strong()[完整测试代码见7.附录]
 #h(1.8em)
@@ -306,7 +315,7 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 
 #pagebreak()
 
-== 测试结果：
+== 测试结果
 \
 #h(1.8em)
 测试次数取5时输出如下:
@@ -351,7 +360,7 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 #h(1.8em)可以看到对于不同的参数，程序的`acc`与`dev`均在可接受范围内，因此可以认为搜索算法实现正确。
 #pagebreak()
 
-= 各方法不同情况下的性能表现与分析
+= *各方法不同情况下的性能表现与分析*
 \
 #strong()[完整测试代码见7.附录]
 
@@ -365,9 +374,9 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 
 === 测试过程：
 \
-#h(1.8em)测试函数：$f(x) = (x-0.3)^2 + min((1/(x-0.3))^(10^5),0.001)$
+#h(1.8em)测试函数：$ f(x) = (x-0.3)^2 + min((1/(x-0.3))^(10^5),0.001) $
 
-其  图像如下：#align(center)[
+其图像如下：#align(center)[
 #image("p1.png",width: 33%);]
 
 #h(1.8em)测试函数性质：每次计算函数值会涉及无法被优化的$10^5$次乘方运算，可以较好的模拟实际模型中的复杂情况。数学上，$f(x)$在$RR$上为单谷函数，最小值在$x = 0.3$处取得，$f(0.3) = 0$
@@ -485,9 +494,9 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 #pagebreak()
 
 
-= 附录
+= *附录*
 
-== 主体部分：文件`core.h`
+== 主体部分：`core.h`
 
 ```cpp
 /**
@@ -640,7 +649,7 @@ namespace lineSearch{
 }
 #endif
 ```
-== 正确性测试：文件`TOFtest.cpp`
+== 正确性测试：`TOFtest.cpp`
 
 ```cpp
 /**
@@ -898,8 +907,10 @@ int main()
 }
 ```
 
-== 代码下载
+== 代码仓库
 
-全部代码、与x86可执行程序远程`public`存储库：`https://github.com/GYPpro/optimizeLec`
+#h(1cm)全部代码、与x86可执行程序远程`public`存储库：
+#align(center)[`https://github.com/GYPpro/optimizeLec`]
 #set text(fill:gray)
-声明：本实验报告所有代码与测试均由本人独立完成，修改和commit记录均在repo上公开。
+
+#align(bottom)[声明：本实验报告所有代码与测试均由本人独立完成，修改和commit记录均在repo上公开。]
