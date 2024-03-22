@@ -908,9 +908,13 @@ int main()
 ```
 
 == 代码仓库
+#h(1cm)
+#align(center)[
+全部代码、与x86可执行程序均同步在本人的`github`：
 
-#h(1cm)全部代码、与x86可执行程序远程`public`存储库：
-#align(center)[`https://github.com/GYPpro/optimizeLec`]
+`https://github.com/GYPpro/optimizeLec`
+
+本次实验报告存放在`/WEE1`文件夹下]
 #set text(fill:gray)
 
 #align(bottom)[声明：本实验报告所有代码与测试均由本人独立完成，修改和commit记录均在repo上公开。]
