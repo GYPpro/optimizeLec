@@ -21,6 +21,18 @@ namespace ODSearch{
 	const int SECANT = 2;         //割线法
 	const int NEWTON = 3;	      //牛顿法
     
+	double alpha = 1.0;			  //~~
+	
+	
+	/*
+	 * @britf
+	 * Set Descent Rate of DESCTNE method
+	 * */
+	void setDescentAlpha(double _a)
+	{
+		alpha = _a;
+	}
+
     	/**
 	 * @attention 
 	 * function will return -1 and throw exceptions while getting illegal input
@@ -44,7 +56,7 @@ namespace ODSearch{
         {
         case DESCENT:
         {
-
+				
         } break;
 
         case SECANT:
