@@ -1,64 +1,69 @@
 /**
  * @file LGNtest.cpp
- * @brief Large Number test
+ * @brief 大量数据测试
  */
 
 #include <iostream>
 #include <stdlib.h>
 #include "core.h"
 #include <time.h>
+#include <math.h>
 using namespace std;
 
-int N = 1e7;       // test case
-double dev = 0.03; // deviation
+int N = 1e5;       // test case
+double dev = 0.5916079778; // deviation
 
 double f(double x)
 {
-    // if (x >= -0.48)
-    //     return sqrt(x + 1.03);
-    // else
-    //     return sqrt(0.07 - x);
-    return (x + 0.48) * (x + 0.48);
+    return x + 0.35/x;
+}
+double df(double x)
+{
+    return (20.0 * x * x - 7.0) / (20.0 * x * x);
+}
+double ddf(double x)
+{
+    return 7.0 / (10.0 * x * x * x);
 }
 int main()
 {
     int tc = 0;
-    double l = -0.5, r = 1.5, acc = 1e-3;
-    double thn = -0.48;
-    double ans;
-    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
-    cout << "[Binary search] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
-    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
-    cout << "[0.618  method] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
-    ans = lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
-    cout << "[  Fibonacci  ] ans:" << ans << " acc:" << (acc / abs(thn - ans)) * 100 << " dev:" << max(0.0, abs(thn - ans) - acc) / acc * 100 << "%\n";
+    double l = 0, r = 1.5, acc = 1e-3;
+    double thn =0.5916079778;
+    // double ans;
+    auto ans = ODSearch::find_mininum(f, df, l, r, acc, 0.2, ODSearch::DESCENT);
+    cout << "[DESCENT] ans:" << ans.second << " at:" << ans.first<< " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
+    ans = ODSearch::find_mininum(f, df, l, r, acc, 0.2, ODSearch::NEWTON, ddf);
+    cout << "[NEWTON ] ans:" << ans.second << " at:" << ans.first<< " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
+    ans = ODSearch::find_mininum(f, df, l, r, acc, 0.2, ODSearch::SECANT, ddf);
+    cout << "[SECANT ] ans:" << ans.second << " at:" << ans.first<< " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
     int begin = clock();
     while (N > tc++)
     {
 
-        ans += lineSearch::find_mininum(f, l, r, acc, lineSearch::BINARY);
+        ans = ODSearch::find_mininum(f, df, l, r, acc, 0.5, ODSearch::DESCENT);
     }
     int end = clock();
     tc = 0;
-    cout << "[Binary search] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    cout << "[DESCENT] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
     begin = clock();
     while (N > tc++)
     {
 
-        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::GOLDEN_RATIO);
+        ans = ODSearch::find_mininum(f, df, l, r, acc, 0.5, ODSearch::NEWTON, ddf);
     }
     end = clock();
     tc = 0;
-    cout << "[0.618  method] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    cout << "[NEWTON ] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
     begin = clock();
     while (N > tc++)
     {
 
-        ans +=lineSearch::find_mininum(f, l, r, acc, lineSearch::FIBONACCI);
+        ans = ODSearch::find_mininum(f, df, l, r, acc, 0.5, ODSearch::SECANT, ddf);
     }
     end = clock();
     tc = 10;
-    cout << "[  Fibonacci  ] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
-    cout << ans << "\n";
+    cout << "[SECANT ] cost:" << double(end-begin)/CLOCKS_PER_SEC << "s" << "\n";
+    cout << ans.first << "\n";
     system("pause");
 }

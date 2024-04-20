@@ -15,6 +15,9 @@
 #include <algorithm>
 #include <vector>
 
+#include <iostream>
+
+
 namespace ODSearch{
     
 	const int DESCENT = 1;		  //最速下降法
@@ -44,12 +47,12 @@ namespace ODSearch{
 	std::pair<double,double> find_mininum(
 		double (*func)(double x),  // 原函数
 		double (*dfunc)(double x), // 一阶导函数
-		double (*ddfunc)(double x) = nullptr,// 二阶导函数(可选)
 		double l = -_inf,				   // 下界
 		double r = _inf,				   // 上界
 		double acc = _acc,				   // 搜索精度
         double x = 0.0,                    // 初始点
-		int mod = DESCENT				   // 搜索方法
+		int mod = DESCENT,				   // 搜索方法
+		double (*ddfunc)(double x) = nullptr// 二阶导函数(可选)
 	) {
 		if (l > r) {throw "Illegal Range Execption";return {-1,-1};}
         if (x < l || x > r) {throw "Illegal Initial Value";return {-1,-1};}
@@ -58,19 +61,24 @@ namespace ODSearch{
         {
         case DESCENT:
         {
-			double alpha = 1.0;//步长因子
+			double alpha = 0.1;//初始步长因子
 			double curx = x;//当前搜索点
 			double fmin = func(x);//当前函数值最小值
 			double grad = dfunc(x);//当前梯度
 
+			// int tc = 0;
 			while(abs(grad) > acc)
 			{
+				//二分线性搜索确定可选步长因子
 				while(!(func(curx - alpha * grad) < func(curx)))
 					alpha = alpha / 2.0;
 				fmin = func(curx - alpha * grad);
 				curx -= alpha * grad;
 				grad = dfunc(curx);
+				alpha = 0.1;
+				// tc ++;
 			}
+			// std::cout << "tc:" << tc << "\n";
 			return {curx,fmin};
         } break;
 
@@ -88,12 +96,15 @@ namespace ODSearch{
 			double fmin = func(x);//当前函数值最小值
 			double grad = dfunc(x);//当前梯度
 
+			// int tc = 0;
 			while(abs(grad) > acc)
 			{
 				fmin = func(curx - Taylor(curx));
 				curx -= Taylor(curx);
 				grad = dfunc(curx);
+				// tc ++;
 			}
+			// std::cout << "tc:" << tc << "\n";
 			return {curx,fmin};
         } break;
 
@@ -112,13 +123,16 @@ namespace ODSearch{
 				return (curx - prfx) * dfunc(curx) / (dfunc(curx) - dfunc(prfx));
 			};
 
+			// int tc = 0;
 
 			while(abs(grad) > acc)
 			{
 				fmin = func(curx - getSec());
 				curx -= getSec();
 				grad = dfunc(curx);
+				// tc ++;
 			}
+			// std::cout << "tc:" << tc << "\n";
 			return {curx,fmin};
 
         } break;

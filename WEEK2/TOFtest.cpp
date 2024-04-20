@@ -52,12 +52,12 @@ int main()
         cout << "< Theoretical > ans:" << thn << " acc:"
              << "inf\n";
 
-        auto ans = ODSearch::find_mininum(f, df, ddf, l, r, acc, 0.0, ODSearch::DESCENT);
-        cout << "[Binary search] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
-        ans = ODSearch::find_mininum(f, df, ddf, l, r, acc, 0.0, ODSearch::NEWTON);
-        cout << "[0.618  method] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
-        ans = ODSearch::find_mininum(f, df, ddf, l, r, acc, 0.0, ODSearch::SECANT);
-        cout << "[  Fibonacci  ] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
+        auto ans = ODSearch::find_mininum(f, df, l, r, acc, 0.0, ODSearch::DESCENT);
+        cout << "[DESCENT] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
+        ans = ODSearch::find_mininum(f, df, l, r, acc, 0.0, ODSearch::NEWTON, ddf);
+        cout << "[NEWTON ] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
+        ans = ODSearch::find_mininum(f, df, l, r, acc, 0.0, ODSearch::SECANT, ddf);
+        cout << "[SECANT ] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
     }
     system("pause");
 }
