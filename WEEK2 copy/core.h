@@ -21,10 +21,7 @@ namespace ODSearch{
 	const int NEWTON = 2;	      //牛顿法
 	const int SECANT = 3;         //割线法
     
-	const double _inf = 1e299;	  //最坏边界
-	const double _acc = 1e-3;	  //默认精度
-
-	double alpha = 1.0;			  //
+	double alpha = 1.0;			  //~~
 	
 	
 	/*
@@ -46,11 +43,11 @@ namespace ODSearch{
 		double (*func)(double x),  // 原函数
 		double (*dfunc)(double x), // 一阶导函数
 		double (*ddfunc)(double x) = nullptr,// 二阶导函数(可选)
-		double l = -_inf,				   // 下界
-		double r = _inf,				   // 上界
-		double acc = _acc,				   // 搜索精度
-        double x = 0.0,                    // 初始点
-		int mod = DESCENT				   // 搜索方法
+		double l,				   // 下界
+		double r,				   // 上界
+		double acc,				   // 搜索精度
+        double x,                  // 初始点
+		int mod 				   // 搜索方法
 	) {
 		if (l > r) {throw "Illegal Range Execption";return {-1,-1};}
         if (x < l || x > r) {throw "Illegal Initial Value";return {-1,-1};}
@@ -63,7 +60,7 @@ namespace ODSearch{
 			double fmin = func(x);//当前函数值最小值
 			double grad = dfunc(x);//当前梯度
 
-			while(abs(grad) > acc)
+			while(grad > acc)
 			{
 				fmin = func(curx - alpha * grad);
 				curx -= alpha * grad;
@@ -86,7 +83,7 @@ namespace ODSearch{
 			double fmin = func(x);//当前函数值最小值
 			double grad = dfunc(x);//当前梯度
 
-			while(abs(grad) > acc)
+			while(grad > acc)
 			{
 				fmin = func(curx - alpha * Taylor(curx));
 				curx -= alpha * Taylor(curx);
@@ -111,7 +108,7 @@ namespace ODSearch{
 			};
 
 
-			while(abs(grad) > acc)
+			while(grad > acc)
 			{
 				fmin = func(curx - getSec());
 				curx -= getSec();
