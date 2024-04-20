@@ -78,10 +78,25 @@
   ])
 = *实验目的*
 \
-#h(1.8em) 
-
+ 实现利用迭代方法计算一维函数最小值的自定义函数。函数能处理最基本的异常，并比较这些方法在收敛速度上的表现。
 
 = *实验原理与理论分析*
+
+本次实验选用*最速下降法*，*牛顿法*和*割线法*。
+== 最速下降法
+
+对于当前搜索点$x_k$，有梯度$d_k = -gradient f(x_k)$。取合适的步长因子$alpha_k s.t. f(x_k + alpha_k d_k) < f(x_k)$ 则$ x_(k+1) = x_k + alpha_k d_k $ 
+
+== 牛顿法
+对于二次可微函数$f(x)$，取二次Taylor展开$ f(x_k + s) approx q(k)(s) = f(x_k) + gradient f(x_k)^T s + 1/2 s^T gradient^2 f(x_k) s $
+将上式右侧极小化，有迭代方程
+$ x_(k+1) = x_k - [gradient^2 f(x_k)]^(-1) gradient f(x_k) $
+
+== 割线法
+
+利用两次迭代值$x_k$，$x_(k-1)$在导函数图像上与x轴形成的交点作为新的迭代点，近似替代牛顿法中导函数的作用，即$ x_(k+1) = x_k - (x_k - x_(k-1)) / (gradient f(x_n) - gradient f(x_(n-1))) gradient f(x_n) $
+
+#pagebreak()
 
 = *代码框架*
 \

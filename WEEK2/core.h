@@ -24,17 +24,16 @@ namespace ODSearch{
 	const double _inf = 1e299;	  //最坏边界
 	const double _acc = 1e-3;	  //默认精度
 
-	double alpha = 1.0;			  //
 	
 	
-	/*
-	 * @britf
-	 * Set Descent Rate of DESCTNE method
-	 * */
-	void setDescentAlpha(double _a)
-	{
-		alpha = _a;
-	}
+	// /*
+	//  * @britf
+	//  * Set Descent Rate of DESCTNE method
+	//  * */
+	// void setDescentAlpha(double _a)
+	// {
+	// 	alpha = _a;
+	// }
 
     	/**
 	 * @attention 
@@ -59,12 +58,15 @@ namespace ODSearch{
         {
         case DESCENT:
         {
+			double alpha = 1.0;//步长因子
 			double curx = x;//当前搜索点
 			double fmin = func(x);//当前函数值最小值
 			double grad = dfunc(x);//当前梯度
 
 			while(abs(grad) > acc)
 			{
+				while(!(func(curx - alpha * grad) < func(curx)))
+					alpha = alpha / 2.0;
 				fmin = func(curx - alpha * grad);
 				curx -= alpha * grad;
 				grad = dfunc(curx);
@@ -88,8 +90,8 @@ namespace ODSearch{
 
 			while(abs(grad) > acc)
 			{
-				fmin = func(curx - alpha * Taylor(curx));
-				curx -= alpha * Taylor(curx);
+				fmin = func(curx - Taylor(curx));
+				curx -= Taylor(curx);
 				grad = dfunc(curx);
 			}
 			return {curx,fmin};
