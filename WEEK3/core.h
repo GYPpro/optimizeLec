@@ -18,6 +18,8 @@
 #include <iostream>
 #include <initializer_list>
 
+#define IF_LOG
+
 #include <fstream>
 
 class Logger {
@@ -43,7 +45,9 @@ public:
         // std::cout << message << std::endl;
 
         // 写入到日志文件
+#ifdef IF_LOG
         logFile << message << std::endl;
+#endif
     }
 };
 
@@ -202,15 +206,15 @@ namespace ODSearch{
 			Corrdinate curx = x_0;//当前搜索点
 			double fmin = func(x_0);//当前函数值最小值
 			Corrdinate grad = dfunc(x_0);//当前梯度
-
-			// int tc = 0;
-			while(grad.norm() > epsilon)
-			{
 				std::string Log; 
 				Log += std::to_string(curx.x);
 				Log += " ";
 				Log += std::to_string(curx.y);
 				logger.log(Log);
+
+			// int tc = 0;
+			while(grad.norm() > epsilon)
+			{
 				if(k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20)) {throw "Coordinate out of Precision Warning";}
 
 				//二分线性搜索确定可选步长因子
@@ -222,6 +226,11 @@ namespace ODSearch{
 				alpha = 0.1;
 				k ++;
 				// tc ++;
+				std::string Log; 
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
 			}
 			// std::cout << "tc:" << tc << "\n";
 			return {curx,fmin};
@@ -230,22 +239,22 @@ namespace ODSearch{
         case CG:
         {
 			int k = 0;//迭代次数
-			double alpha = 0.1;//初始步长因子
+			double alpha = 0.5;//初始步长因子
 			Corrdinate curx = x_0;//当前搜索点
 			double fmin = func(x_0);//当前函数值最小值
 			Corrdinate grad_k = dfunc(x_0);//当前梯度
 			Corrdinate grad_k_1 = grad_k;//上一次梯度
 			Corrdinate d_k = -grad_k;//搜索方向
 			Corrdinate d_k_1 = d_k;//上一次搜索方向
-
-			Logger logger(std::string("WEEK3\\CG_") + (FRorPRP?"FR":"PRP") + ".log");
-			while(grad_k.norm() > epsilon)
-			{
 				std::string Log; 
 				Log += std::to_string(curx.x);
 				Log += " ";
 				Log += std::to_string(curx.y);
 				logger.log(Log);
+
+			Logger logger(std::string("WEEK3\\CG_") + (FRorPRP?"FR":"PRP") + ".log");
+			while(grad_k.norm() > epsilon)
+			{
 				if(k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20)) {throw "Coordinate out of Precision Warning";}
 
 				if(k == 0)
@@ -258,7 +267,7 @@ namespace ODSearch{
 					grad_k_1 = grad_k;
 					grad_k = dfunc(curx);
 					d_k = -grad_k;
-					alpha = 0.1;
+					alpha = 0.5;
 				}
 				else
 				{
@@ -283,9 +292,14 @@ namespace ODSearch{
 					grad_k_1 = grad_k;
 					grad_k = dfunc(curx);
 					d_k = -grad_k;
-					alpha = 0.1;
+					alpha = 0.5;
 				}
 				k ++;
+				std::string Log; 
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
 			}
 			return {curx,fmin};
         } break;
