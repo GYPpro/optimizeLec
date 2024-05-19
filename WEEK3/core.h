@@ -26,6 +26,8 @@ namespace ODSearch{
 
 	const double _epsilon = 1e-3;	  //容限
 
+	int FRorPRP = 1; // 共轭梯度方向公式选择，1为FR，0为PBD
+
 
 	/**
 	 * @brief
@@ -49,6 +51,11 @@ namespace ODSearch{
 		Corrdinate operator-(Corrdinate c)
 		{
 			return Corrdinate(x - c.x,y - c.y);
+		}
+
+		Corrdinate operator-()
+		{
+			return Corrdinate(-x,-y);
 		}
 
 		//数乘
@@ -118,6 +125,14 @@ namespace ODSearch{
 
 	};
 	
+	/**
+	 * @brief
+	 * set the FRorPRP
+	 */
+	void setFRorPRP(int mod)
+	{
+		FRorPRP = mod;
+	}
 
 	double abs(Corrdinate c)
 	{
@@ -165,7 +180,55 @@ namespace ODSearch{
 
         case CG:
         {
-			
+			int k = 0;//迭代次数
+			double alpha = 0.1;//初始步长因子
+			Corrdinate curx = x_0;//当前搜索点
+			double fmin = func(x_0);//当前函数值最小值
+			Corrdinate grad_k = dfunc(x_0);//当前梯度
+			Corrdinate grad_k_1 = grad_k;//上一次梯度
+			Corrdinate d_k = -grad_k;//搜索方向
+			Corrdinate d_k_1 = d_k;//上一次搜索方向
+
+			while(grad_k.norm() > epsilon)
+			{
+				if(k == 0)
+				{
+					//二分线性搜索确定可选步长因子
+					while(!(func(curx - d_k * alpha) < func(curx)))
+						alpha = alpha / 2.0;
+					fmin = func(curx - d_k * alpha);
+					curx -= d_k * alpha;
+					grad_k = dfunc(curx);
+					d_k = -grad_k;
+					alpha = 0.1;
+				}
+				else
+				{
+					if (FRorPRP == 1)
+					{
+						//FR公式
+						double beta = (grad_k * grad_k) / (grad_k_1 * grad_k_1);
+						d_k = -grad_k + d_k * beta;
+					}
+					else
+					{
+						//PRP公式
+						double beta = (grad_k * (grad_k - grad_k_1)) / (grad_k_1 * grad_k_1);
+						d_k = -grad_k + d_k * beta;
+					}
+					
+					//二分线性搜索确定可选步长因子
+					while(!(func(curx - d_k * alpha) < func(curx)))
+						alpha = alpha / 2.0;
+					fmin = func(curx - d_k * alpha);
+					curx -= d_k * alpha;
+					grad_k_1 = grad_k;
+					grad_k = dfunc(curx);
+					alpha = 0.1;
+				}
+				k ++;
+			}
+			return {curx,fmin};
         } break;
 
         
