@@ -3,13 +3,13 @@
  * JNU,Guo Yanpei,github@GYPpro
  * https://github.com/GYPpro/optimizeLec
  * @file
- * /optimizeLec/WEEK2/core.h
+ * /optimizeLec/WEEK3/core.h
  * @brief
- * a functional lib solving One-dimensional search
+ * a functional lib solving Two-dimensional search
  */
 
-#ifndef _ONE_DIMENSIONAL_SEARCH_
-#define _ONE_DIMENSIONAL_SEARCH_
+#ifndef _TWO_DIMENSIONAL_SEARCH_
+#define _TWO_DIMENSIONAL_SEARCH_
 
 #include <math.h>
 #include <algorithm>
