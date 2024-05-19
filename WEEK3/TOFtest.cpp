@@ -8,27 +8,24 @@
 #include "core.h"
 using namespace std;
 
-int tc = 10;       // test case
-double dev = 0.03; // deviation
+using ODSearch::Corrdinate;
 
-double f(double a)
+int tc = 1;       // test case
+Corrdinate dev = 0.03; // deviation
+
+double f(Corrdinate x)
 {
-    return (a - dev) * (a - dev);
+    return (x.x - dev.x) * (x.x - dev.x) + (x.y - dev.y) * (x.y - dev.y);
 }
-double df(double a)
+Corrdinate df(Corrdinate x)
 {
-    return 2 * a - 2 * dev;
-}
-double ddf(double a)
-{
-    return 2.0;
+    return Corrdinate(2 * (x.x - dev.x), 2 * (x.y - dev.y));
 }
 int main()
 {
-    double l = -1,
-           r = 1.0,
-           acc = 0.001;
-    double thn = 0.03;
+    double acc = 0.001;
+    Corrdinate thn = dev;
+    double eps = 1e-5;
     srand(1145);
 
     auto randint = [](int l, int r) -> int
@@ -39,25 +36,38 @@ int main()
     while (tc--)
     {
 
-        dev = ((double)randint(1, 100)) / 50.0;
+        if(tc == 5)
+            tc -= 0;
+        dev = {((double)randint(1, 100)) / 50.0,((double)randint(1, 100)) / 50.0};
         thn = dev;
-        l = dev - ((double)randint(100, 200)) / 50.0;
-        r = dev + ((double)randint(100, 200)) / 50.0;
-        acc = pow(0.1, abs(randint(1, 10)));
+        eps = pow(0.1, abs(randint(1, 10)));
 
         cout << "\n----Test Cases" << 10 - tc << "----\n";
 
-        cout << "< search data > l:" << l << " r:" << r << " acc:" << acc << "\n";
-
-        cout << "< Theoretical > ans:" << thn << " acc:"
+        cout << "<search data> eps:" << eps << "\n";
+                 
+        cout << "<Theoretical> ans:(" << thn.x << " " << thn.y << ") acc:"
              << "inf\n";
+        acc = eps;
+        try
+        {        
+            auto ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::GD,eps);
+            cout << "[    G D    ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+            ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps);
+            cout << "[  C G(FR)  ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+            ODSearch::FRorPRP = 0;
+            ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps);
+            cout << "[  C G(PBD) ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+            ODSearch::FRorPRP = 1;
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << e.what() << '\n';
+        }
+        
 
-        auto ans = ODSearch::find_mininum(f, df, l, r, acc, 0.0, ODSearch::DESCENT);
-        cout << "[DESCENT] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
-        ans = ODSearch::find_mininum(f, df, l, r, acc, 0.0, ODSearch::NEWTON, ddf);
-        cout << "[NEWTON ] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
-        ans = ODSearch::find_mininum(f, df, l, r, acc, 0.0, ODSearch::SECANT, ddf);
-        cout << "[SECANT ] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
+        
+        // cout << "[SECANT ] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
     }
     system("pause");
 }

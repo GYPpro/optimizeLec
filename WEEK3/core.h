@@ -14,9 +14,48 @@
 #include <math.h>
 #include <algorithm>
 #include <vector>
-
+#include <string>
 #include <iostream>
 #include <initializer_list>
+
+#include <fstream>
+
+class Logger {
+private:
+    std::ofstream logFile;
+public:
+    Logger(const std::string& filename) {
+        logFile.open(filename, std::ios::out); // 打开文件用于写入，fugai
+        if (!logFile.is_open()) {
+            std::cerr << "Error opening log file: " << filename << std::endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    ~Logger() {
+        if (logFile.is_open()) {
+            logFile.close();
+        }
+    }
+
+    void log(const std::string& message) {
+        // 输出到控制台
+        // std::cout << message << std::endl;
+
+        // 写入到日志文件
+        logFile << message << std::endl;
+    }
+};
+
+// int main() {
+//     Logger logger("app.log"); // 创建日志对象，并指定日志文件名
+
+//     // 示例：记录一些信息
+//     logger.log("Starting application...");
+//     // ... 应用程序的其他代码 ...
+
+//     return 0;
+// }
 
 
 namespace ODSearch{
@@ -24,7 +63,7 @@ namespace ODSearch{
 	const int GD = 1;		  //最速下降法
     const int CG = 2;		  //共轭梯度法
 
-	const double _epsilon = 1e-3;	  //容限
+	const double _epsilon = 1e-3;	  //默认容限
 
 	int FRorPRP = 1; // 共轭梯度方向公式选择，1为FR，0为PBD
 
@@ -152,11 +191,13 @@ namespace ODSearch{
 		int mod = GD, //搜索模式
 		double epsilon = _epsilon //容限
 	) {
-		
+		if(epsilon <= 1e-14) {throw "Epsilon out of Precision Exception";return {{0,0},-1};}
         switch (mod)
         {
         case GD:
         {
+			Logger logger("WEEK3\\GD.log");
+			int k = 0;//迭代次数
 			double alpha = 0.1;//初始步长因子
 			Corrdinate curx = x_0;//当前搜索点
 			double fmin = func(x_0);//当前函数值最小值
@@ -165,6 +206,13 @@ namespace ODSearch{
 			// int tc = 0;
 			while(grad.norm() > epsilon)
 			{
+				std::string Log; 
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
+				if(k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20)) {throw "Coordinate out of Precision Warning";}
+
 				//二分线性搜索确定可选步长因子
 				while(!(func(curx - grad * alpha) < func(curx)))
 					alpha = alpha / 2.0;
@@ -172,6 +220,7 @@ namespace ODSearch{
 				curx -= grad * alpha;
 				grad = dfunc(curx);
 				alpha = 0.1;
+				k ++;
 				// tc ++;
 			}
 			// std::cout << "tc:" << tc << "\n";
@@ -189,15 +238,24 @@ namespace ODSearch{
 			Corrdinate d_k = -grad_k;//搜索方向
 			Corrdinate d_k_1 = d_k;//上一次搜索方向
 
+			Logger logger(std::string("WEEK3\\CG_") + (FRorPRP?"FR":"PRP") + ".log");
 			while(grad_k.norm() > epsilon)
 			{
+				std::string Log; 
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
+				if(k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20)) {throw "Coordinate out of Precision Warning";}
+
 				if(k == 0)
 				{
 					//二分线性搜索确定可选步长因子
-					while(!(func(curx - d_k * alpha) < func(curx)))
+					while(!(func(curx + d_k * alpha) < func(curx)))
 						alpha = alpha / 2.0;
-					fmin = func(curx - d_k * alpha);
-					curx -= d_k * alpha;
+					fmin = func(curx + d_k * alpha);
+					curx += d_k * alpha;
+					grad_k_1 = grad_k;
 					grad_k = dfunc(curx);
 					d_k = -grad_k;
 					alpha = 0.1;
@@ -218,12 +276,13 @@ namespace ODSearch{
 					}
 					
 					//二分线性搜索确定可选步长因子
-					while(!(func(curx - d_k * alpha) < func(curx)))
+					while(!(func(curx + d_k * alpha) < func(curx)))
 						alpha = alpha / 2.0;
-					fmin = func(curx - d_k * alpha);
-					curx -= d_k * alpha;
+					fmin = func(curx + d_k * alpha);
+					curx += d_k * alpha;
 					grad_k_1 = grad_k;
 					grad_k = dfunc(curx);
+					d_k = -grad_k;
 					alpha = 0.1;
 				}
 				k ++;
