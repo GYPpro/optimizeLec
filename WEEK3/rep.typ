@@ -187,6 +187,10 @@ lineSearch::find_mininum(f,df,{0,0},ODSearch::CG,0.0019).first;
 
 #h(1cm)使用`setFRorPRP`设置共轭梯度法的推导式，`setFRorPRP(1)`为`FR`，`setFRorPRP(0)`为`PRP`。
 
+函数在宏中定义了分析用的`Log`输出，通过`#define IF_LOG`来开启。若开启，则会在调用时分别在文件`GD.log`、`CG_FR.log`和`CG_PRP.log`中记录搜索过程。
+
+报告后续的绘图流程均借助这些log完成，不再赘述。
+
 #pagebreak()
 
 = *核心代码构成*
@@ -194,91 +198,125 @@ lineSearch::find_mininum(f,df,{0,0},ODSearch::CG,0.0019).first;
 
 == 最速下降法
 ```cpp
-			int k = 0;//迭代次数
-			double alpha = 0.1;//初始步长因子
-			Corrdinate curx = x_0;//当前搜索点
-			double fmin = func(x_0);//当前函数值最小值
-			Corrdinate grad = dfunc(x_0);//当前梯度
+			int k = 0;					  // 迭代次数
+			double alpha = 1;			  // 初始步长因子
+			Corrdinate curx = x_0;		  // 当前搜索点
+			double fmin = func(x_0);	  // 当前函数值最小值
+			Corrdinate grad = dfunc(x_0); // 当前梯度
+
+#ifdef IF_LOG
+			Logger logger("WEEK3\\GD.log");
+			std::string Log;
+			Log += std::to_string(curx.x);
+			Log += " ";
+			Log += std::to_string(curx.y);
+			logger.log(Log);
+#endif
 
 			// int tc = 0;
-			while(grad.norm() > epsilon)
+			while (grad.norm() > epsilon)
 			{
+				if (k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20))
+				{
+					throw "Coordinate out of Precision Warning";
+				}
 
-				if(k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20)) {throw "Coordinate out of Precision Warning";}
-
-				//二分线性搜索确定可选步长因子
-				while(!(func(curx - grad * alpha) < func(curx)))
+				// 二分线性搜索确定可选步长因子
+				while (!(func(curx - grad * alpha) < func(curx)))
 					alpha = alpha / 2.0;
 				fmin = func(curx - grad * alpha);
 				curx -= grad * alpha;
 				grad = dfunc(curx);
-				alpha = 0.1;
-				k ++;
-				// tc ++;
+				alpha = 1;
+				k++;
+// tc ++;
+#ifdef IF_LOG
+				std::string Log;
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
+#endif
 			}
 			// std::cout << "tc:" << tc << "\n";
-			return {curx,fmin};
+			return {curx, fmin};
 ```
 
-#pagebreak()
+// #pagebreak()
 
 == 共轭梯度法
 
 ```cpp
-			int k = 0;//迭代次数
-			double alpha = 0.1;//初始步长因子
-			Corrdinate curx = x_0;//当前搜索点
-			double fmin = func(x_0);//当前函数值最小值
-			Corrdinate grad_k = dfunc(x_0);//当前梯度
-			Corrdinate grad_k_1 = grad_k;//上一次梯度
-			Corrdinate d_k = -grad_k;//搜索方向
-			Corrdinate d_k_1 = d_k;//上一次搜索方向
-
-			while(grad_k.norm() > epsilon)
+			int k = 0;						// 迭代次数
+			double alpha = 3;				// 初始步长因子
+			Corrdinate curx = x_0;			// 当前搜索点
+			double fmin = func(x_0);		// 当前函数值最小值
+			Corrdinate grad_k = dfunc(x_0); // 当前梯度
+			Corrdinate grad_k_1 = grad_k;	// 上一次梯度
+			Corrdinate d_k = -grad_k;		// 搜索方向
+			Corrdinate d_k_1 = d_k;			// 上一次搜索方向
+#ifdef IF_LOG
+			Logger logger(std::string("WEEK3\\CG_") + (FRorPRP ? "FR" : "PRP") + ".log");
+			std::string Log;
+			Log += std::to_string(curx.x);
+			Log += " ";
+			Log += std::to_string(curx.y);
+			logger.log(Log);
+#endif
+			while (grad_k.norm() > epsilon)
 			{
-
-				if(k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20)) {throw "Coordinate out of Precision Warning";}
-
-				if(k == 0)
+				if (k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20))
 				{
-					//二分线性搜索确定可选步长因子
-					while(!(func(curx + d_k * alpha) < func(curx)))
+					throw "Coordinate out of Precision Warning";
+				}
+
+				if (k == 0)
+				{
+					// 二分线性搜索确定可选步长因子
+					while (!(func(curx + d_k * alpha) < func(curx)))
 						alpha = alpha / 2.0;
 					fmin = func(curx + d_k * alpha);
 					curx += d_k * alpha;
 					grad_k_1 = grad_k;
 					grad_k = dfunc(curx);
 					d_k = -grad_k;
-					alpha = 0.1;
+					alpha = 3;
 				}
 				else
 				{
 					if (FRorPRP == 1)
 					{
-						//FR公式
+						// FR公式
 						double beta = (grad_k * grad_k) / (grad_k_1 * grad_k_1);
 						d_k = -grad_k + d_k * beta;
 					}
 					else
 					{
-						//PRP公式
+						// PRP公式
 						double beta = (grad_k * (grad_k - grad_k_1)) / (grad_k_1 * grad_k_1);
 						d_k = -grad_k + d_k * beta;
 					}
-					
-					//二分线性搜索确定可选步长因子
-					while(!(func(curx + d_k * alpha) < func(curx)))
+
+					// 二分线性搜索确定可选步长因子
+					while (!(func(curx + d_k * alpha) < func(curx)))
 						alpha = alpha / 2.0;
 					fmin = func(curx + d_k * alpha);
 					curx += d_k * alpha;
 					grad_k_1 = grad_k;
 					grad_k = dfunc(curx);
 					d_k = -grad_k;
-					alpha = 0.1;
+					alpha = 3;
 				}
-				k ++;
+				k++;
+#ifdef IF_LOG
+				std::string Log;
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
+#endif
 			}
-			return {curx,fmin};
+			return {curx, fmin};
 ```
 
 #pagebreak()
@@ -314,7 +352,7 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 
 == 测试结果
 \
-#h(1.8em) 以1145为STL随机数生成器种子进行了100次测试，结果全部正确。
+#h(1.8em) 以1145为STL随机数生成器种子进行了100次测试，*结果全部正确*。
 
 #pagebreak()
 
@@ -349,43 +387,118 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 [  C G(PBD) ] ans:2.06457e-09 df(ans)9.08751e-05 df(thn):0 at:(0.219955 0.0399919) acc:110.041 dev:0%
 ```
 
-#h(1.8em)程序均正确地找到了极小值点，且精度符合要求
+#h(1.8em)*程序均正确地找到了极小值点，且精度符合要求*
 
 #pagebreak()
 
 = *各方法不同情况下的性能表现与分析*
-\
-#strong()[完整测试代码见7.附录]
-
 
 == 对于最速下降法的最坏情况：
-#strong()[见附录]`LGNtest.cpp`
+#strong()[见附录]`LGNtest.cpp`和`draft.ipynb`
 \
 
-#h(1.8em)
+=== 测试用例：
+#h(1.8em) 构造测试函数$f(x,y) = x^2 + y^2/2$，其$x in [0,0.7],y in [0,0.7]$范围内等值线如图：
+
+#align(center)[#image("p6.1.png",width: 50%)]
+
 === 测试过程：
-\
+#h(1.8em) 设置容限为$10^(-5)$，从点$(0,0)$开始搜索：
+
+分别调用
+```cpp
+ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::GD,eps)
+ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps)//FRorPRP = 1
+ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps)//FRorPRP = 0
+```
+
+#h(1cm)确认得到正确结果:
+```
+    <search data> eps:1e-05
+    <Theoretical> ans:(0.5 0.5) acc:inf
+    [    G D    ] ans:4.6867e-11 df(ans)9.68163e-06 df(thn):0 at:(0.5 0.49999) acc:103.288 dev:0%
+    [  C G(FR)  ] ans:2.42193e-11 df(ans)6.95978e-06 df(thn):0 at:(0.5 0.499993) acc:143.683 dev:0%
+    [  C G(PBD) ] ans:3.83661e-11 df(ans)8.75969e-06 df(thn):0 at:(0.5 0.499991) acc:114.159 dev:0%
+```
+
+重复$10^5$次，统计三种方法代码消耗的时间：
+
+#align(center)[#box[```shell
+
+[    G D    ] cost:1.142s
+
+
+[  C G(FR)  ] cost:0.188s
+
+
+[  C G(PBD) ] cost:0.336s
+
+
+```]
+#box[#image("p6.4.png",width: 200pt)]]
+=== 测试结果：
+#h(1.8em) 三种方法均能找到正确的极小值点，且精度符合要求。
+
+分析log，可以对比三种方法使用的搜索次数和他们搜索过程的轨迹：
+
+#align(center)[#box[#image("p6.2.png",width: 200pt)]#box[#image("p6.3.png",width: 250pt)]]
+
 #h(1.8em) 
+
 === 测试分析：
 \
-#h(1.8em)
+#h(1.8em)从图中可以看出，最速下降法在搜索过程中不能有效地找到合适的搜索步长和下降方向，导致搜索效率较差。而共轭梯度法在搜索过程中能够更快地找到合适的搜索方向，从而更快地找到极小值点。
 #pagebreak()
 
 
 
-== 对于复杂目标函数进行搜索：
+== 对于一般目标函数进行搜索：
 #strong()[见附录]`CMFtest.cpp`
 \
 #h(1.8em)
 
+=== 测试用例：
+
+$ f(x,y) = (1-x)^2 + 3(y-x^2)^2 $
+
+#h(1.8em)其在全局范围内有最小值点$(1,1)$，$f(1,1) = 0$。其3D图像与等值线如下：
+
+#box[#image("p6.5.png",width: 200pt)]#box[#image("p6.6.png",width: 200pt)]
 
 === 测试过程：
-\
-#h(1.8em)
+#h(1.8em) 设置容限为$10^(-5)$，从点$(0,0)$开始搜索：
+分别调用
+```cpp
+ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::GD,eps)
+ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps)//FRorPRP = 1
+ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps)//FRorPRP = 0
+```
+
+#h(1cm)确认得到正确结果:
+```
+  <search data> eps:1e-05
+  <Theoretical> ans:(1 1) acc:inf
+  [    G D    ] ans:6.05069e-11 df(ans)9.58326e-06 df(thn):0 at:(0.999993 0.999984) acc:104.349 dev:0%
+  [  C G(FR)  ] ans:5.24562e-11 df(ans)8.08791e-06 df(thn):0 at:(0.999993 0.999985) acc:123.641 dev:0%
+  [  C G(PBD) ] ans:8.65653e-11 df(ans)9.57498e-06 df(thn):0 at:(0.999991 0.999981) acc:104.439 dev:0%
+```
+
+=== 测试结果
+
+分析log，可以对比三种方法使用的搜索次数和他们搜索过程的轨迹：
+
+#box[#image("p6.7.png",width: 200pt)]#box[#image("p6.8.png",width: 200pt)]
+
+以对数坐标画出三种方法的收敛曲线：
+
+#box[#image("p6.9.png",width: 90%)]
 
 === 测试分析：
 \
 #h(1.8em)
+从结果来看，最速下降法的折线特征明显，所求下降方向有明显偏差，而两种梯度法均解决了这个问题。
+
+对于两种不同的梯度法公式，其速度表现相似。从图中可以看出，FR公式在末端搜索的效率较高，而PRP公式在搜索初期效率较高。
 
 
 
@@ -395,19 +508,584 @@ $"acc" > 100%$且$"dev" = 0$时可以视为解是可接受的。
 
 === 核心`core.h`
 
+```cpp
+/**
+ * @author
+ * JNU,Guo Yanpei,github@GYPpro
+ * https://github.com/GYPpro/optimizeLec
+ * @file
+ * /optimizeLec/WEEK2/core.h
+ * @brief
+ * a functional lib solving One-dimensional search
+ */
 
+#ifndef _ONE_DIMENSIONAL_SEARCH_
+#define _ONE_DIMENSIONAL_SEARCH_
+
+#include <math.h>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <initializer_list>
+
+#define IF_LOG
+
+#include <fstream>
+
+class Logger
+{
+private:
+	std::ofstream logFile;
+
+public:
+	Logger(const std::string &filename)
+	{
+		logFile.open(filename, std::ios::out); // 打开文件用于写入，fugai
+		if (!logFile.is_open())
+		{
+			std::cerr << "Error opening log file: " << filename << std::endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	~Logger()
+	{
+		if (logFile.is_open())
+		{
+			logFile.close();
+		}
+	}
+
+	void log(const std::string &message)
+	{
+		// 输出到控制台
+		// std::cout << message << std::endl;
+
+		// 写入到日志文件
+#ifdef IF_LOG
+		logFile << message << std::endl;
+#endif
+	}
+};
+
+namespace ODSearch
+{
+
+	const int GD = 1; // 最速下降法
+	const int CG = 2; // 共轭梯度法
+
+	const double _epsilon = 1e-3; // 默认容限
+
+	int FRorPRP = 1; // 共轭梯度方向公式选择，1为FR，0为PBD
+
+	/**
+	 * @brief
+	 * a Corrdinate class as 2D vector
+	 */
+	class Corrdinate
+	{
+	public:
+		double x;
+		double y;
+
+		Corrdinate(double x = 0, double y = 0) : x(x), y(y) {}
+
+		Corrdinate(std::initializer_list<double> l)
+		{
+			auto it = l.begin();
+			x = *it;
+			y = *(++it);
+		}
+
+		Corrdinate operator-(Corrdinate c)
+		{
+			return Corrdinate(x - c.x, y - c.y);
+		}
+
+		Corrdinate operator-()
+		{
+			return Corrdinate(-x, -y);
+		}
+
+		// 数乘
+		Corrdinate operator*(double a)
+		{
+			return Corrdinate(x * a, y * a);
+		}
+
+		// 加
+		Corrdinate operator+(Corrdinate c)
+		{
+			return Corrdinate(x + c.x, y + c.y);
+		}
+
+		// 点乘
+		double operator*(Corrdinate c)
+		{
+			return x * c.x + y * c.y;
+		}
+
+		// 求模
+		double norm()
+		{
+			return sqrt(x * x + y * y);
+		}
+
+		// 单位化
+		Corrdinate normalize()
+		{
+			double n = norm();
+			return Corrdinate(x / n, y / n);
+		}
+
+		// 除
+		Corrdinate operator/(double a)
+		{
+			return Corrdinate(x / a, y / a);
+		}
+
+		Corrdinate operator+=(const Corrdinate c)
+		{
+			x += c.x;
+			y += c.y;
+			return *this;
+		}
+
+		Corrdinate operator-=(const Corrdinate c)
+		{
+			x -= c.x;
+			y -= c.y;
+			return *this;
+		}
+
+		Corrdinate operator*=(double a)
+		{
+			x *= a;
+			y *= a;
+			return *this;
+		}
+
+		Corrdinate operator/=(double a)
+		{
+			x /= a;
+			y /= a;
+			return *this;
+		}
+	};
+
+	/**
+	 * @brief
+	 * set the FRorPRP
+	 */
+	void setFRorPRP(int mod)
+	{
+		FRorPRP = mod;
+	}
+
+	double abs(Corrdinate c)
+	{
+		return sqrt(c.x * c.x + c.y * c.y);
+	}
+
+	/**
+	 * @attention
+	 * function will return -1 and throw exceptions while getting illegal input
+	 * @brief
+	 * Finding the minnum num of a One-dimensional function
+	 */
+	std::pair<Corrdinate, double> find_mininum(
+		double (*func)(Corrdinate),		 // 目标函数
+		Corrdinate (*dfunc)(Corrdinate), // 目标函数梯度
+		Corrdinate x_0,					 // 初始搜索点
+		int mod = GD,					 // 搜索模式
+		double epsilon = _epsilon		 // 容限
+	)
+	{
+		if (epsilon <= 1e-14)
+		{
+			throw "Epsilon out of Precision Exception";
+			return {{0, 0}, -1};
+		}
+		switch (mod)
+		{
+		case GD:
+		{
+			int k = 0;					  // 迭代次数
+			double alpha = 1;			  // 初始步长因子
+			Corrdinate curx = x_0;		  // 当前搜索点
+			double fmin = func(x_0);	  // 当前函数值最小值
+			Corrdinate grad = dfunc(x_0); // 当前梯度
+
+#ifdef IF_LOG
+			Logger logger("WEEK3\\GD.log");
+			std::string Log;
+			Log += std::to_string(curx.x);
+			Log += " ";
+			Log += std::to_string(curx.y);
+			logger.log(Log);
+#endif
+
+			// int tc = 0;
+			while (grad.norm() > epsilon)
+			{
+				if (k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20))
+				{
+					throw "Coordinate out of Precision Warning";
+				}
+
+				// 二分线性搜索确定可选步长因子
+				while (!(func(curx - grad * alpha) < func(curx)))
+					alpha = alpha / 2.0;
+				fmin = func(curx - grad * alpha);
+				curx -= grad * alpha;
+				grad = dfunc(curx);
+				alpha = 1;
+				k++;
+// tc ++;
+#ifdef IF_LOG
+				std::string Log;
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
+#endif
+			}
+			// std::cout << "tc:" << tc << "\n";
+			return {curx, fmin};
+		}
+		break;
+
+		case CG:
+		{
+			int k = 0;						// 迭代次数
+			double alpha = 3;				// 初始步长因子
+			Corrdinate curx = x_0;			// 当前搜索点
+			double fmin = func(x_0);		// 当前函数值最小值
+			Corrdinate grad_k = dfunc(x_0); // 当前梯度
+			Corrdinate grad_k_1 = grad_k;	// 上一次梯度
+			Corrdinate d_k = -grad_k;		// 搜索方向
+			Corrdinate d_k_1 = d_k;			// 上一次搜索方向
+#ifdef IF_LOG
+			Logger logger(std::string("WEEK3\\CG_") + (FRorPRP ? "FR" : "PRP") + ".log");
+			std::string Log;
+			Log += std::to_string(curx.x);
+			Log += " ";
+			Log += std::to_string(curx.y);
+			logger.log(Log);
+#endif
+
+			while (grad_k.norm() > epsilon)
+			{
+				if (k > 10 && (curx.norm() < 1e-20 || curx.norm() > 1e20))
+				{
+					throw "Coordinate out of Precision Warning";
+				}
+
+				if (k == 0)
+				{
+					// 二分线性搜索确定可选步长因子
+					while (!(func(curx + d_k * alpha) < func(curx)))
+						alpha = alpha / 2.0;
+					fmin = func(curx + d_k * alpha);
+					curx += d_k * alpha;
+					grad_k_1 = grad_k;
+					grad_k = dfunc(curx);
+					d_k = -grad_k;
+					alpha = 3;
+				}
+				else
+				{
+					if (FRorPRP == 1)
+					{
+						// FR公式
+						double beta = (grad_k * grad_k) / (grad_k_1 * grad_k_1);
+						d_k = -grad_k + d_k * beta;
+					}
+					else
+					{
+						// PRP公式
+						double beta = (grad_k * (grad_k - grad_k_1)) / (grad_k_1 * grad_k_1);
+						d_k = -grad_k + d_k * beta;
+					}
+
+					// 二分线性搜索确定可选步长因子
+					while (!(func(curx + d_k * alpha) < func(curx)))
+						alpha = alpha / 2.0;
+					fmin = func(curx + d_k * alpha);
+					curx += d_k * alpha;
+					grad_k_1 = grad_k;
+					grad_k = dfunc(curx);
+					d_k = -grad_k;
+					alpha = 3;
+				}
+				k++;
+#ifdef IF_LOG
+				std::string Log;
+				Log += std::to_string(curx.x);
+				Log += " ";
+				Log += std::to_string(curx.y);
+				logger.log(Log);
+#endif
+			}
+			return {curx, fmin};
+		}
+		break;
+
+		default:
+		{
+			throw "Unexpection Search Mod Exception";
+			return {{0, 0}, -1};
+		}
+		break;
+		}
+		throw "Unknown Exception";
+		return {{0, 0}, -1};
+	}
+}
+#endif
+
+```
 
 === 测试代码
 
 ==== `TOFtest.cpp`
 
+```cpp
+/**
+ * @file TOFtest.cpp
+ * @brief True or False test
+ */
 
+#include <iostream>
+#include <stdlib.h>
+#include "core.h"
+using namespace std;
+
+using ODSearch::Corrdinate;
+
+int tc = 1;       // test case
+Corrdinate dev = 0.03; // deviation
+
+double f(Corrdinate x)
+{
+    return (x.x - dev.x) * (x.x - dev.x) + (x.y - dev.y) * (x.y - dev.y);
+}
+Corrdinate df(Corrdinate x)
+{
+    return Corrdinate(2 * (x.x - dev.x), 2 * (x.y - dev.y));
+}
+int main()
+{
+    double acc = 0.001;
+    Corrdinate thn = dev;
+    double eps = 1e-5;
+    srand(1145);
+
+    auto randint = [](int l, int r) -> int
+    {
+        return (int)((rand() * (r - l)) / (RAND_MAX) + l);
+    };
+
+    while (tc--)
+    {
+
+        if(tc == 5)
+            tc -= 0;
+        dev = {((double)randint(1, 100)) / 50.0,((double)randint(1, 100)) / 50.0};
+        thn = dev;
+        eps = pow(0.1, abs(randint(1, 10)));
+
+        cout << "\n----Test Cases" << 10 - tc << "----\n";
+
+        cout << "<search data> eps:" << eps << "\n";
+                 
+        cout << "<Theoretical> ans:(" << thn.x << " " << thn.y << ") acc:"
+             << "inf\n";
+        acc = eps;
+        try
+        {        
+            auto ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::GD,eps);
+            cout << "[    G D    ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+            ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps);
+            cout << "[  C G(FR)  ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+            ODSearch::FRorPRP = 0;
+            ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps);
+            cout << "[  C G(PBD) ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+            ODSearch::FRorPRP = 1;
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << e.what() << '\n';
+        }
+        
+
+        
+        // cout << "[SECANT ] ans:" << ans.second << " at:" << ans.first << " acc:" << (acc / abs(thn - ans.first)) * 100 << " dev:" << max(0.0, abs(thn - ans.first) - acc) / acc * 100 << "%\n";
+    }
+    system("pause");
+}
+```
+
+==== `WTHtest.cpp`
+```cpp
+/**
+ * @file WTHtest.cpp
+ * @brief 最速下降法的最坏情况测试
+ */
+
+#include <iostream>
+#include <stdlib.h>
+#include "core.h"
+#include <time.h>
+#include <math.h>
+using namespace std;
+using ODSearch::Corrdinate;
+
+int N = 1e5;                 // test case
+Corrdinate dev = {0.5, 0.5}; // deviation
+
+double f(Corrdinate x)
+{
+    return (x.x - dev.x) * (x.x - dev.x) + (x.y - dev.y) * (x.y - dev.y) / 2;
+}
+Corrdinate df(Corrdinate x)
+{
+    return Corrdinate(2 * (x.x - dev.x), (x.y - dev.y));
+}
+int main()
+{
+    int tc = 0;
+    Corrdinate thn = dev;
+    double eps = 1e-5;
+
+    cout << "<search data> eps:" << eps << "\n";
+
+    cout << "<Theoretical> ans:(" << thn.x << " " << thn.y << ") acc:"
+         << "inf\n";
+    double acc = eps;
+    auto ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::GD, eps);
+    cout << "[    G D    ] ans:" << ans.second << " df(ans)" << df(ans.first).norm() << " df(thn):" << df(thn).norm() << " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn) - df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn) - df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+    ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+    cout << "[  C G(FR)  ] ans:" << ans.second << " df(ans)" << df(ans.first).norm() << " df(thn):" << df(thn).norm() << " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn) - df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn) - df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+    ODSearch::FRorPRP = 0;
+    ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+    cout << "[  C G(PBD) ] ans:" << ans.second << " df(ans)" << df(ans.first).norm() << " df(thn):" << df(thn).norm() << " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn) - df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn) - df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+    ODSearch::FRorPRP = 1;
+    int begin = clock();
+    while (N > tc++)
+    {
+
+        ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::GD, eps);
+    }
+    int end = clock();
+    tc = 0;
+    cout << "[    G D    ] cost:" << double(end - begin) / CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+    }
+    end = clock();
+    tc = 0;
+    cout << "[  C G(FR)  ] cost:" << double(end - begin) / CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ODSearch::FRorPRP = 0;
+        ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+
+        ODSearch::FRorPRP = 1;
+    }
+    end = clock();
+    tc = 10;
+    cout << "[  C G(PBD) ] cost:" << double(end - begin) / CLOCKS_PER_SEC << "s" << "\n";
+    cout << ans.first.x << "\n";
+    system("pause");
+}
+```
 ==== `CMFtest.cpp`
 
+```cpp
+/**
+ * @file CMFtest.cpp
+ * @brief Complex Model Funtion test
+ */
 
-==== `LGNtest.cpp`
+#include <iostream>
+#include <stdlib.h>
+#include "core.h"
+#include <time.h>
+#include <math.h>
+using namespace std;
+using ODSearch::Corrdinate;
 
+int N = 50;              // test case
+Corrdinate dev = {1, 1}; // deviation
+int k = 1e5;
 
+double f(Corrdinate x)
+{
+    return (1 - x.x) * (1 - x.x) + 3 * (x.y - x.x * x.x) * (x.y - x.x * x.x);
+}
+Corrdinate df(Corrdinate x)
+{
+    return Corrdinate(-2 * (1 - x.x) - 12.0 * (x.x * x.y - x.x * x.x * x.x), 6 * x.y - 6.0 * x.x * x.x);
+}
+int main()
+{
+    int tc = 0;
+    Corrdinate thn = dev;
+    double eps = 1e-5;
+    cout << "<search data> eps:" << eps << "\n";
+
+    cout << "<Theoretical> ans:(" << thn.x << " " << thn.y << ") acc:"
+         << "inf\n";
+    double acc = eps;
+    auto ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::GD, eps);
+    cout << "[    G D    ] ans:" << ans.second << " df(ans)" << df(ans.first).norm() << " df(thn):" << df(thn).norm() << " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn) - df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn) - df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+    ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+    cout << "[  C G(FR)  ] ans:" << ans.second << " df(ans)" << df(ans.first).norm() << " df(thn):" << df(thn).norm() << " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn) - df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn) - df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+    ODSearch::FRorPRP = 0;
+    ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+    cout << "[  C G(PBD) ] ans:" << ans.second << " df(ans)" << df(ans.first).norm() << " df(thn):" << df(thn).norm() << " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn) - df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn) - df(ans.first)).norm() - acc) / acc * 100 << "%\n";
+    ODSearch::FRorPRP = 1;
+    int begin = clock();
+    while (N > tc++)
+    {
+
+        ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::GD, eps);
+    }
+    int end = clock();
+    tc = 0;
+    cout << "[    G D    ] cost:" << double(end - begin) / CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+    }
+    end = clock();
+    tc = 0;
+    cout << "[  C G(FR)  ] cost:" << double(end - begin) / CLOCKS_PER_SEC << "s" << "\n";
+    begin = clock();
+    while (N > tc++)
+    {
+
+        ODSearch::FRorPRP = 0;
+        ans = ODSearch::find_mininum(f, df, {0.0, 0.0}, ODSearch::CG, eps);
+
+        ODSearch::FRorPRP = 1;
+    }
+    end = clock();
+    tc = 10;
+    cout << "[  C G(PBD) ] cost:" << double(end - begin) / CLOCKS_PER_SEC << "s" << "\n";
+    cout << ans.first.x << "\n";
+    system("pause");
+}
+```
 == 仓库
 #h(1cm)
 #align(center)[
