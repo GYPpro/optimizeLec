@@ -8,7 +8,7 @@
 #include "core.h"
 using namespace std;
 
-using ODSearch::Corrdinate;
+using SDsearch::Corrdinate;
 
 int tc = 1;       // test case
 Corrdinate dev = 0.03; // deviation
@@ -51,14 +51,14 @@ int main()
         acc = eps;
         try
         {        
-            auto ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::GD,eps);
+            auto ans = SDsearch::find_mininum(f, df,{0.0,0.0}, SDsearch::GD,eps);
             cout << "[    G D    ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
-            ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps);
+            ans = SDsearch::find_mininum(f, df,{0.0,0.0}, SDsearch::CG,eps);
             cout << "[  C G(FR)  ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
-            ODSearch::FRorPRP = 0;
-            ans = ODSearch::find_mininum(f, df,{0.0,0.0}, ODSearch::CG,eps);
+            SDsearch::FRorPRP = 0;
+            ans = SDsearch::find_mininum(f, df,{0.0,0.0}, SDsearch::CG,eps);
             cout << "[  C G(PBD) ] ans:" << ans.second << " df(ans)"<<df(ans.first).norm()<<" df(thn):"<<df(thn).norm()<< " at:(" << ans.first.x << " " << ans.first.y << ") acc:" << (acc / (df(thn)-df(ans.first)).norm()) * 100 << " dev:" << max(0.0, (df(thn)-df(ans.first)).norm() - acc) / acc * 100 << "%\n";
-            ODSearch::FRorPRP = 1;
+            SDsearch::FRorPRP = 1;
         }
         catch(const std::exception& e)
         {

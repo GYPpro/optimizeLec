@@ -58,7 +58,7 @@ public:
 	}
 };
 
-namespace ODSearch
+namespace SDsearch
 {
 
 	const int GD = 1; // 最速下降法
